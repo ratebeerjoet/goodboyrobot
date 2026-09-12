@@ -129,7 +129,7 @@ console.log(data);
 ```
 
 <Tip>
-  Cache GET responses wherever your use case allows. For example, if you call `GET /api/v1/commands` to render a list of available commands in your UI, cache the result for a few minutes rather than fetching on every page load. Fewer requests means more headroom in your rate-limit budget for the calls that actually need to be real-time.
+  Cache GET responses wherever your use case allows. For example, if you call `GET /commands` to render a list of available commands in your UI, cache the result for a few minutes rather than fetching on every page load. Fewer requests means more headroom in your rate-limit budget for the calls that actually need to be real-time.
 </Tip>
 
 ## Frequently Asked Questions

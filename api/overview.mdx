@@ -24,7 +24,7 @@ All endpoints documented in this reference are relative to that base. For exampl
 
 GoodBoyRobot uses **path-based versioning**. The current stable version is `v1`, reflected directly in the URL path. When a breaking change is necessary, a new version (`v2`, and so on) is introduced at a new path — your existing `v1` integrations keep working without any forced migration.
 
-Non-breaking additions, such as new optional fields or new endpoints, are rolled out to the current version without a version bump. Subscribe to the [changelog](#) to stay informed of any updates.
+Non-breaking additions, such as new optional fields or new endpoints, are rolled out to the current version without a version bump. Check the [GoodBoyRobot blog](https://goodboyrobot.com/blog) to stay informed of any updates.
 
 ## Response Envelope
 
@@ -81,16 +81,16 @@ The table below lists every public endpoint in the current API version. Click an
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/v1/commands` | List all available commands. |
-| `POST` | `/api/v1/commands/execute` | Execute a command. |
-| `GET` | `/api/v1/integrations` | List connected integrations. |
-| `POST` | `/api/v1/integrations/connect` | Connect a new integration. |
-| `DELETE` | `/api/v1/integrations/{id}` | Remove an integration by ID. |
-| `GET` | `/api/v1/webhooks` | List configured webhooks. |
-| `POST` | `/api/v1/webhooks` | Create a new webhook. |
-| `DELETE` | `/api/v1/webhooks/{id}` | Delete a webhook by ID. |
-| `GET` | `/api/v1/users/me` | Get the current user's profile. |
-| `PATCH` | `/api/v1/users/me` | Update the current user's profile. |
+| `GET` | `/commands` | List all available commands. |
+| `POST` | `/commands/execute` | Execute a command. |
+| `GET` | `/integrations` | List connected integrations. |
+| `POST` | `/integrations/connect` | Connect a new integration. |
+| `DELETE` | `/integrations/{id}` | Remove an integration by ID. |
+| `GET` | `/webhooks` | List configured webhooks. |
+| `POST` | `/webhooks` | Create a new webhook. |
+| `DELETE` | `/webhooks/{id}` | Delete a webhook by ID. |
+| `GET` | `/users/me` | Get the current user's profile. |
+| `PATCH` | `/users/me` | Update the current user's profile. |
 
 ## Next Steps
 

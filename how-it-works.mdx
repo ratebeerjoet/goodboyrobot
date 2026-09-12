@@ -4,18 +4,18 @@ sidebarTitle: "How It Works"
 description: "GoodBoyRobot runs on a three-part model — commands you trigger, events that flow through your system, and integrations that connect your services."
 ---
 
-GoodBoyRobot is built around a simple, reliable model that scales from a single developer to a large engineering team. At its core, the platform revolves around three concepts: **Commands** are actions you deliberately trigger, **Events** are things that happen in your system and need to be routed somewhere, and **Integrations** are the external services that send and receive that data. Byte — GoodBoyRobot's mascot and internal routing engine — sits at the center, making sure every signal gets where it needs to go without you having to babysit it.
+GoodBoyRobot is built around a simple, reliable model that scales from a single developer to a large engineering team. At its core, the platform revolves around three concepts: **Commands** are actions you deliberately trigger, **Events** are things that happen in your system and need to be routed somewhere, and **Integrations** are the external services that send and receive that data. Byte — GoodBoyRobot's friendly mascot — sits at the center, making sure every signal gets where it needs to go without you having to babysit it.
 
 ## The Three-Part Model
 
 Picture a simple flow: your application does something meaningful — a user signs up, a payment succeeds, a deploy finishes. GoodBoyRobot picks up that signal, figures out what should happen next based on your configuration, and dispatches the right actions to the right services. You define the rules once; Byte handles the rest every time.
 
 ```
-Your App  ──►  Commands  ──►  Byte (routing engine)  ──►  Integrations
-                                        │
-                               Events ◄─┘
-                                        │
-                              Webhooks  └──►  Your Endpoints
+Your App  ──►  Commands  ──►  Byte  ──►  Integrations
+                                 │
+                        Events ◄─┘
+                                 │
+                       Webhooks  └──►  Your Endpoints
 ```
 
 The three parts are designed to work independently or together. You can use just commands to automate a single workflow, or you can wire up the full pipeline — commands feeding events, events triggering integrations, integrations posting webhooks back to your system.
@@ -100,7 +100,7 @@ To remove an integration at any time, call `DELETE /api/v1/integrations/{id}` or
 
 ## Byte's Role in the Middle
 
-Byte isn't just a mascot — the name refers to GoodBoyRobot's internal routing engine that evaluates every command, event, and integration handoff in real time. Byte applies your configuration rules, handles retries when a delivery fails, logs everything for auditability, and makes sure data flows in the right order. You set the rules; Byte enforces them faithfully, every time, without complaint.
+Byte isn't just a mascot — Byte is the dependable guide behind every command, event, and integration handoff on the platform. Byte applies your configuration rules, handles retries when a delivery fails, logs everything for auditability, and makes sure data flows in the right order. You set the rules; Byte follows them faithfully, every time, without complaint.
 
 When something unexpected happens — a malformed payload, a timed-out integration, a command that returns an error — Byte captures the details, flags the issue in your event log, and (if you've set it up) fires a webhook to let you know. Nothing gets silently dropped.
 

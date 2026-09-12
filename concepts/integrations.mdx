@@ -1,7 +1,7 @@
 ---
-title: "Integrations: Connect GoodBoyRobot to Your Stack"
+title: "Integrations: Connect GoodBoyRobot to External Services"
 sidebarTitle: "Integrations"
-description: "Integrations connect GoodBoyRobot to external services like Slack and GitHub, letting events from those tools trigger commands automatically in your workspace."
+description: "Integrations connect GoodBoyRobot to Slack, GitHub, and webhooks, letting events from those services trigger your commands automatically."
 ---
 
 Integrations are the bridges between GoodBoyRobot and the rest of your toolchain. Each integration authenticates with an external service, listens for activity there, and translates that activity into a structured event that GoodBoyRobot can act on. You configure what happens next — which command to run, how to transform the payload, where to send the result — entirely within GoodBoyRobot. Your external tools stay untouched.
@@ -54,6 +54,8 @@ Every integration — regardless of type — goes through the same three-phase l
   </Step>
   <Step title="Activate">
     Enable the integration to begin receiving live events. Until you activate, GoodBoyRobot accepts test payloads but does not process real traffic. Activation is reversible — you can pause or remove an integration at any time.
+
+    Once activated, confirm the integration is live by listing your active integrations:
 
     ```bash
     curl --request GET \

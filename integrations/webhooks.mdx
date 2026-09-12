@@ -1,7 +1,7 @@
 ---
-title: "Custom Webhooks: Send Events from Any Service"
+title: "GoodBoyRobot Webhooks: Receive Events from Any Service"
 sidebarTitle: "Webhooks"
-description: "Create custom webhook endpoints in GoodBoyRobot to receive HTTP POST events from any service and trigger commands automatically, with HMAC signature verification."
+description: "Set up GoodBoyRobot webhook endpoints to receive HTTP POST events from any service, trigger commands automatically, and verify HMAC-SHA256 signatures."
 ---
 
 Webhooks are the universal connector in GoodBoyRobot. Any service that can send an HTTP POST request — a payment processor, a monitoring tool, an internal app, or anything in between — can trigger a GoodBoyRobot command by posting a JSON payload to your unique webhook URL. You don't need a native integration for every tool you use; webhooks give you a generic, secure entry point that works with anything.
@@ -149,7 +149,7 @@ app.post("/incoming", express.raw({ type: "application/json" }), (req, res) => {
 
 ## Delivery Retries
 
-GoodBoyRobot considers a webhook delivery successful when it receives an HTTP `2xx` response from your endpoint within **10 seconds**. If your endpoint times out, returns a `4xx` (except `400`), or returns a `5xx`, GoodBoyRobot marks the delivery as failed and schedules a retry.
+GoodBoyRobot considers a webhook delivery successful when it receives an HTTP `2xx` response from your endpoint within **10 seconds**. If your endpoint times out, returns a `5xx` error, or returns certain `4xx` codes like `429 Too Many Requests`, GoodBoyRobot marks the delivery as failed and schedules a retry. Responses with `400 Bad Request` or `401 Unauthorized` are treated as permanent failures and won't be retried — fix the underlying issue first.
 
 GoodBoyRobot retries failed deliveries up to **5 times** using exponential backoff:
 
@@ -173,7 +173,7 @@ To view, update, or delete a webhook, go to **Integrations → Webhooks** in you
 
 ```bash
 # List all webhooks
-curl https://api.goodboyrobot.com/api/v1/webhooks \
+curl -X GET https://api.goodboyrobot.com/api/v1/webhooks \
   -H "Authorization: Bearer YOUR_API_KEY"
 
 # Delete a webhook

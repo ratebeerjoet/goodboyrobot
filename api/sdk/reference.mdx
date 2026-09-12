@@ -1,10 +1,10 @@
 ---
-title: "GoodBoyRobot SDK Reference — Methods and Types"
+title: "GoodBoyRobot SDK Client Reference: Full Method List"
 sidebarTitle: "SDK Reference"
 description: "Full reference for every method on the GoodBoyRobot SDK client — commands, integrations, webhooks, and users — with TypeScript signatures and examples."
 ---
 
-The GoodBoyRobot SDK client is organized into five namespaces — `commands`, `integrations`, `webhooks`, and `users` — each mapping directly to the underlying REST API. Every method returns a Promise so you can use `async/await` or `.then()` chaining. This page covers each method with its full TypeScript signature and a short example you can adapt for your own project.
+The GoodBoyRobot SDK client is organized into four namespaces — `commands`, `integrations`, `webhooks`, and `users` — each mapping directly to the underlying REST API. Every method returns a Promise so you can use `async/await` or `.then()` chaining. This page covers each method with its full TypeScript signature and a short example you can adapt for your own project.
 
 <Note>
   The Python and Go SDKs expose equivalent methods under the same logical names. Python uses `snake_case` (e.g. `client.commands.list()` stays the same, but multi-word parameters become `snake_case`). Go uses `PascalCase` for exported identifiers (e.g. `client.Commands.List(ctx, opts)`). Behavior and parameters are identical across all three SDKs.
