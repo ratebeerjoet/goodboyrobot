@@ -1,0 +1,120 @@
+---
+title: "Commands: Trigger Actions in GoodBoyRobot"
+sidebarTitle: "Commands"
+description: "Commands are the discrete actions that GoodBoyRobot executes. Learn what built-in commands are available and how to trigger them via the API."
+---
+
+Commands are the verbs of GoodBoyRobot. Each command represents a single, well-defined action — fetching data, sending a notification, transforming a payload, or routing traffic to another service. You trigger a command by calling the API directly, or automatically through an integration event. Either way, GoodBoyRobot executes the action, records the result, and returns a structured response you can act on immediately.
+
+## Built-In Commands
+
+GoodBoyRobot ships with four built-in commands that cover the most common automation needs out of the box.
+
+<CardGroup cols={2}>
+  <Card title="fetch" icon="arrow-down-to-bracket">
+    Retrieve data from an external URL or connected integration endpoint. Supports GET and POST requests with custom headers.
+  </Card>
+  <Card title="notify" icon="bell">
+    Send a notification to a connected channel — Slack, email, or a custom webhook. Supports templated message bodies.
+  </Card>
+  <Card title="transform" icon="shuffle">
+    Apply a named transformation schema to an incoming payload. Useful for reshaping data before passing it to another command.
+  </Card>
+  <Card title="route" icon="route">
+    Forward an event or payload to one or more downstream commands based on conditional rules you define.
+  </Card>
+</CardGroup>
+
+## Anatomy of a Command Call
+
+Every command goes through the same endpoint: `POST /api/v1/commands/execute`. The request body is a JSON object with three top-level keys.
+
+```json
+{
+  "command": "<name>",
+  "payload": {},
+  "options": {}
+}
+```
+
+- **`command`** — the name of the built-in or custom command you want to run (e.g. `"fetch"`).
+- **`payload`** — the data your command needs to do its work. The shape varies per command.
+- **`options`** — optional runtime settings such as `timeout_ms`, `retry_count`, or `dry_run`.
+
+### Example: Running the `fetch` Command
+
+The following example uses the `fetch` command to retrieve a JSON resource from an external URL. Include your API key as a Bearer token in the `Authorization` header.
+
+```bash
+curl --request POST \
+  --url https://api.goodboyrobot.com/api/v1/commands/execute \
+  --header "Authorization: Bearer gbr_your_api_key_here" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "command": "fetch",
+    "payload": {
+      "url": "https://jsonplaceholder.typicode.com/todos/1",
+      "method": "GET"
+    },
+    "options": {
+      "timeout_ms": 5000
+    }
+  }'
+```
+
+<Tip>
+  Instead of crafting raw HTTP requests, use the official GoodBoyRobot SDK. The SDK handles authentication, retries, and response parsing for you — so you can call `client.commands.execute("fetch", payload)` and get a fully-typed result back in seconds.
+</Tip>
+
+## Command Response Structure
+
+Every successful command execution returns the same top-level response shape, regardless of which command you ran.
+
+<ResponseField name="id" type="string" required>
+  A unique identifier for this command execution. Use this ID to look up the execution record in your dashboard or via the audit log.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  The outcome of the execution. Possible values are `success`, `failure`, and `pending` (for async commands that have not yet resolved).
+</ResponseField>
+
+<ResponseField name="result" type="object">
+  The data returned by the command. The shape of this object depends on which command was run. For `fetch`, it contains the response body and HTTP status code from the upstream URL.
+</ResponseField>
+
+<ResponseField name="executed_at" type="string" required>
+  An ISO 8601 timestamp recording exactly when GoodBoyRobot began executing the command, e.g. `"2024-11-15T09:41:03Z"`.
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "id": "cmd_01hxyz4k9m2pqr8stvw3",
+  "status": "success",
+  "result": {
+    "http_status": 200,
+    "body": {
+      "userId": 1,
+      "id": 1,
+      "title": "delectus aut autem",
+      "completed": false
+    }
+  },
+  "executed_at": "2024-11-15T09:41:03Z"
+}
+```
+
+## Listing Available Commands
+
+To see every command available in your workspace — including any custom commands you have registered — call the commands list endpoint.
+
+```bash
+curl --request GET \
+  --url https://api.goodboyrobot.com/api/v1/commands \
+  --header "Authorization: Bearer gbr_your_api_key_here"
+```
+
+<Note>
+  Custom commands extend the built-in set. They follow the same request and response contract, so everything you have learned here applies to them as well.
+</Note>

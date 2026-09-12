@@ -1,0 +1,444 @@
+---
+title: "GoodBoyRobot SDK Reference — Methods and Types"
+sidebarTitle: "SDK Reference"
+description: "Full reference for every method on the GoodBoyRobot SDK client — commands, integrations, webhooks, and users — with TypeScript signatures and examples."
+---
+
+The GoodBoyRobot SDK client is organized into five namespaces — `commands`, `integrations`, `webhooks`, and `users` — each mapping directly to the underlying REST API. Every method returns a Promise so you can use `async/await` or `.then()` chaining. This page covers each method with its full TypeScript signature and a short example you can adapt for your own project.
+
+<Note>
+  The Python and Go SDKs expose equivalent methods under the same logical names. Python uses `snake_case` (e.g. `client.commands.list()` stays the same, but multi-word parameters become `snake_case`). Go uses `PascalCase` for exported identifiers (e.g. `client.Commands.List(ctx, opts)`). Behavior and parameters are identical across all three SDKs.
+</Note>
+
+---
+
+## client.commands
+
+### `client.commands.list(options?)`
+
+Lists all commands available to your account. Use `limit` and `offset` to paginate through large result sets.
+
+```typescript TypeScript signature
+function list(options?: {
+  limit?: number;   // Max results to return. Default: 20, max: 100.
+  offset?: number;  // Number of results to skip. Default: 0.
+}): Promise<CommandList>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    import { GoodBoyRobot } from '@goodboyrobot/sdk';
+
+    const client = new GoodBoyRobot({ apiKey: process.env.GOODBOYROBOT_API_KEY });
+
+    const result = await client.commands.list({ limit: 10, offset: 0 });
+
+    for (const command of result.commands) {
+      console.log(command.name, command.description);
+    }
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const { GoodBoyRobot } = require('@goodboyrobot/sdk');
+
+    const client = new GoodBoyRobot({ apiKey: process.env.GOODBOYROBOT_API_KEY });
+
+    const result = await client.commands.list({ limit: 10, offset: 0 });
+
+    for (const command of result.commands) {
+      console.log(command.name, command.description);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Expandable title="CommandList response shape">
+  <ResponseField name="commands" type="Command[]" required>
+    Array of command objects returned by the query.
+  </ResponseField>
+  <ResponseField name="total" type="number" required>
+    Total number of commands available across all pages.
+  </ResponseField>
+  <ResponseField name="limit" type="number" required>
+    The `limit` value that was applied to this response.
+  </ResponseField>
+  <ResponseField name="offset" type="number" required>
+    The `offset` value that was applied to this response.
+  </ResponseField>
+</Expandable>
+
+---
+
+### `client.commands.execute(name, payload?, options?)`
+
+Executes a command by name and returns the result once it completes. Pass an optional `payload` object to supply command-specific input data, and `options` to control execution behavior.
+
+```typescript TypeScript signature
+function execute(
+  name: string,
+  payload?: Record<string, unknown>,
+  options?: {
+    timeoutMs?: number; // Execution timeout in milliseconds. Default: 30000.
+  }
+): Promise<CommandResult>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const result = await client.commands.execute(
+      'send-notification',
+      { userId: '42', message: 'Your report is ready.' },
+      { timeoutMs: 10000 }
+    );
+
+    console.log('Status:', result.status);
+    console.log('Output:', result.output);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const result = await client.commands.execute(
+      'send-notification',
+      { userId: '42', message: 'Your report is ready.' },
+      { timeoutMs: 10000 }
+    );
+
+    console.log('Status:', result.status);
+    console.log('Output:', result.output);
+    ```
+  </Tab>
+</Tabs>
+
+<Expandable title="CommandResult response shape">
+  <ResponseField name="id" type="string" required>
+    Unique identifier for this execution run.
+  </ResponseField>
+  <ResponseField name="status" type='"success" | "failed" | "timeout"' required>
+    Final status of the command execution.
+  </ResponseField>
+  <ResponseField name="output" type="Record<string, unknown>">
+    Command-specific output data. Shape varies per command.
+  </ResponseField>
+  <ResponseField name="executedAt" type="string" required>
+    ISO 8601 timestamp of when execution began.
+  </ResponseField>
+</Expandable>
+
+---
+
+## client.integrations
+
+### `client.integrations.list()`
+
+Returns all integrations currently connected to your account.
+
+```typescript TypeScript signature
+function list(): Promise<Integration[]>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const integrations = await client.integrations.list();
+
+    integrations.forEach((integration) => {
+      console.log(`${integration.type} — connected: ${integration.connectedAt}`);
+    });
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const integrations = await client.integrations.list();
+
+    integrations.forEach((integration) => {
+      console.log(`${integration.type} — connected: ${integration.connectedAt}`);
+    });
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### `client.integrations.connect(type, config)`
+
+Connects a new integration of the given type using the provided configuration. Returns the newly created `Integration` object, including its assigned `id`.
+
+```typescript TypeScript signature
+function connect(
+  type: string,
+  config: Record<string, unknown>
+): Promise<Integration>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const integration = await client.integrations.connect('slack', {
+      webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx',
+      channel: '#alerts',
+    });
+
+    console.log('Integration ID:', integration.id);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const integration = await client.integrations.connect('slack', {
+      webhookUrl: 'https://hooks.slack.com/services/T00/B00/xxxx',
+      channel: '#alerts',
+    });
+
+    console.log('Integration ID:', integration.id);
+    ```
+  </Tab>
+</Tabs>
+
+<Expandable title="Integration response shape">
+  <ResponseField name="id" type="string" required>
+    Unique identifier for the integration. Use this when calling `remove()`.
+  </ResponseField>
+  <ResponseField name="type" type="string" required>
+    The integration type (e.g. `"slack"`, `"github"`, `"pagerduty"`).
+  </ResponseField>
+  <ResponseField name="config" type="Record<string, unknown>" required>
+    The configuration values supplied at connection time. Sensitive fields are redacted.
+  </ResponseField>
+  <ResponseField name="connectedAt" type="string" required>
+    ISO 8601 timestamp of when the integration was connected.
+  </ResponseField>
+</Expandable>
+
+---
+
+### `client.integrations.remove(id)`
+
+Disconnects an integration by its ID and cleans up any associated resources. Returns `void` on success.
+
+```typescript TypeScript signature
+function remove(id: string): Promise<void>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    await client.integrations.remove('intg_abc123');
+
+    console.log('Integration removed successfully.');
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    await client.integrations.remove('intg_abc123');
+
+    console.log('Integration removed successfully.');
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Removing an integration is permanent. Any commands or automations that depend on it will fail until you reconnect an integration of the same type.
+</Warning>
+
+---
+
+## client.webhooks
+
+### `client.webhooks.list()`
+
+Returns all webhooks registered on your account.
+
+```typescript TypeScript signature
+function list(): Promise<Webhook[]>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const webhooks = await client.webhooks.list();
+
+    webhooks.forEach((wh) => {
+      console.log(`${wh.id}: ${wh.url} — events: ${wh.events.join(', ')}`);
+    });
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const webhooks = await client.webhooks.list();
+
+    webhooks.forEach((wh) => {
+      console.log(`${wh.id}: ${wh.url} — events: ${wh.events.join(', ')}`);
+    });
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+### `client.webhooks.create(config)`
+
+Registers a new webhook endpoint. GoodBoyRobot will POST a signed payload to your `url` whenever one of the subscribed `events` fires.
+
+```typescript TypeScript signature
+function create(config: {
+  url: string;
+  events: string[];
+  secret?: string; // Used to verify the HMAC-SHA256 signature on incoming payloads.
+}): Promise<Webhook>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const webhook = await client.webhooks.create({
+      url: 'https://example.com/hooks/goodboyrobot',
+      events: ['command.executed', 'integration.connected'],
+      secret: process.env.WEBHOOK_SECRET,
+    });
+
+    console.log('Webhook created:', webhook.id);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const webhook = await client.webhooks.create({
+      url: 'https://example.com/hooks/goodboyrobot',
+      events: ['command.executed', 'integration.connected'],
+      secret: process.env.WEBHOOK_SECRET,
+    });
+
+    console.log('Webhook created:', webhook.id);
+    ```
+  </Tab>
+</Tabs>
+
+<Expandable title="Webhook response shape">
+  <ResponseField name="id" type="string" required>
+    Unique identifier for the webhook. Use this when calling `delete()`.
+  </ResponseField>
+  <ResponseField name="url" type="string" required>
+    The endpoint URL that receives event payloads.
+  </ResponseField>
+  <ResponseField name="events" type="string[]" required>
+    The event types this webhook is subscribed to.
+  </ResponseField>
+  <ResponseField name="createdAt" type="string" required>
+    ISO 8601 timestamp of when the webhook was created.
+  </ResponseField>
+</Expandable>
+
+---
+
+### `client.webhooks.delete(id)`
+
+Deletes a webhook by its ID. GoodBoyRobot stops delivering payloads to that URL immediately.
+
+```typescript TypeScript signature
+function delete(id: string): Promise<void>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    await client.webhooks.delete('wh_xyz789');
+
+    console.log('Webhook deleted.');
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    await client.webhooks.delete('wh_xyz789');
+
+    console.log('Webhook deleted.');
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## client.users
+
+### `client.users.me()`
+
+Returns the profile of the currently authenticated user — the account that owns the API key in use.
+
+```typescript TypeScript signature
+function me(): Promise<User>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const user = await client.users.me();
+
+    console.log(`Logged in as ${user.name} (${user.email})`);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const user = await client.users.me();
+
+    console.log(`Logged in as ${user.name} (${user.email})`);
+    ```
+  </Tab>
+</Tabs>
+
+<Expandable title="User response shape">
+  <ResponseField name="id" type="string" required>
+    Unique identifier for the user account.
+  </ResponseField>
+  <ResponseField name="name" type="string" required>
+    The user's display name.
+  </ResponseField>
+  <ResponseField name="email" type="string" required>
+    The user's verified email address.
+  </ResponseField>
+  <ResponseField name="createdAt" type="string" required>
+    ISO 8601 timestamp of account creation.
+  </ResponseField>
+</Expandable>
+
+---
+
+### `client.users.update(data)`
+
+Updates the profile of the currently authenticated user. Only the fields you include are changed — omitted fields are left as-is.
+
+```typescript TypeScript signature
+function update(data: {
+  name?: string;
+  email?: string;
+}): Promise<User>
+```
+
+<Tabs>
+  <Tab title="TypeScript">
+    ```typescript
+    const updated = await client.users.update({ name: 'Byte the Dog' });
+
+    console.log('Updated name:', updated.name);
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    const updated = await client.users.update({ name: 'Byte the Dog' });
+
+    console.log('Updated name:', updated.name);
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Installation" icon="download" href="/api/sdk/installation">
+    Not set up yet? Follow the installation guide to get the SDK running in minutes.
+  </Card>
+  <Card title="API Overview" icon="bolt" href="/api/overview">
+    Learn about authentication, error codes, and rate limits for the underlying REST API.
+  </Card>
+</CardGroup>

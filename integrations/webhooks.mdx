@@ -1,0 +1,184 @@
+---
+title: "Custom Webhooks: Send Events from Any Service"
+sidebarTitle: "Webhooks"
+description: "Create custom webhook endpoints in GoodBoyRobot to receive HTTP POST events from any service and trigger commands automatically, with HMAC signature verification."
+---
+
+Webhooks are the universal connector in GoodBoyRobot. Any service that can send an HTTP POST request — a payment processor, a monitoring tool, an internal app, or anything in between — can trigger a GoodBoyRobot command by posting a JSON payload to your unique webhook URL. You don't need a native integration for every tool you use; webhooks give you a generic, secure entry point that works with anything.
+
+## How GoodBoyRobot Receives Webhooks
+
+When you create a webhook in GoodBoyRobot, the platform generates a dedicated HTTPS endpoint and a secret signing key for that webhook. You add the endpoint URL to the external service, and configure it to send POST requests when events occur. GoodBoyRobot receives the payload, verifies the HMAC signature to confirm it came from a trusted source, and then executes the command or workflow you've mapped to that webhook.
+
+Each webhook is independent — you can create as many as you need, each with its own URL, secret, and command mapping.
+
+## Creating a Webhook
+
+You can create a webhook from the Dashboard or directly via the API.
+
+<Tabs>
+  <Tab title="Dashboard">
+    <Steps>
+      <Step title="Open the Webhooks page">
+        In your GoodBoyRobot Dashboard, go to **Integrations → Webhooks**, then click **New Webhook**.
+      </Step>
+      <Step title="Name your webhook">
+        Give the webhook a descriptive name so you can identify it later (for example, `stripe-payment-events` or `datadog-alerts`).
+      </Step>
+      <Step title="Map a command">
+        Choose the GoodBoyRobot command that should run when this webhook receives a payload. You can also leave this blank and use conditional logic in the command itself to branch based on the incoming payload.
+      </Step>
+      <Step title="Save and copy your endpoint URL">
+        Click **Create Webhook**. GoodBoyRobot generates a unique endpoint URL and a signing secret. Copy both and store the secret somewhere safe — it won't be shown again in full after this screen.
+      </Step>
+      <Step title="Register the URL in your external service">
+        Paste the endpoint URL into the webhook settings of the external service. Configure it to include the `Content-Type: application/json` header, and set the signing secret in that service's HMAC signing field if it supports it.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="API">
+    Send a `POST` request to `/api/v1/webhooks` with your API key in the `Authorization` header.
+
+    ```bash
+    curl -X POST https://api.goodboyrobot.com/api/v1/webhooks \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "stripe-payment-events",
+        "command": "handle-payment",
+        "description": "Fires on Stripe charge.succeeded events"
+      }'
+    ```
+
+    A successful response returns the new webhook object including its `endpoint_url` and `signing_secret`:
+
+    ```json
+    {
+      "id": "wh_01hx4k9z2m3n5p7q",
+      "name": "stripe-payment-events",
+      "endpoint_url": "https://hooks.goodboyrobot.com/wh_01hx4k9z2m3n5p7q",
+      "signing_secret": "whsec_a7f3c2e1d9b04f8a...",
+      "command": "handle-payment",
+      "created_at": "2024-06-01T10:00:00Z"
+    }
+    ```
+
+    Store the `signing_secret` securely — it is only returned in full at creation time.
+  </Tab>
+</Tabs>
+
+## Webhook Payload Structure
+
+GoodBoyRobot expects incoming webhook payloads to be valid JSON sent with a `Content-Type: application/json` header. The payload can contain any structure your external service produces — GoodBoyRobot passes it through to your command as-is under the `event` key.
+
+A typical inbound payload looks like this:
+
+```json
+{
+  "id": "evt_9f3a1b2c",
+  "type": "charge.succeeded",
+  "created": 1717228800,
+  "data": {
+    "object": {
+      "id": "ch_3P1mXoLkdIwHu7ix",
+      "amount": 4999,
+      "currency": "usd",
+      "customer": "cus_Qx2mA7rB5nT1",
+      "status": "succeeded"
+    }
+  }
+}
+```
+
+Inside your GoodBoyRobot command, you access the payload fields using `{{event.data.object.amount}}` and similar template expressions.
+
+## Verifying Webhook Signatures
+
+GoodBoyRobot signs every delivery attempt it makes **outbound** and expects you to verify incoming signatures for webhooks that originate from third-party services. For webhooks where GoodBoyRobot is the receiver, the external service signs the payload and GoodBoyRobot checks the signature automatically using the secret you stored at creation time.
+
+If you are building a custom sender that posts directly to GoodBoyRobot (for example, an internal app), you must sign the request yourself so GoodBoyRobot can verify it.
+
+### How Signing Works
+
+1. Compute an **HMAC-SHA256** digest of the raw request body using your webhook's `signing_secret` as the key.
+2. Encode the digest as a lowercase hex string.
+3. Include it in the request as the `X-GoodBoyRobot-Signature` header.
+
+GoodBoyRobot computes the same digest server-side and rejects any request where the signatures don't match.
+
+### Signature Verification in Node.js
+
+```javascript
+import crypto from "crypto";
+
+function verifyWebhookSignature(rawBody, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("hex");
+
+  // Use timingSafeEqual to prevent timing attacks
+  const expected = Buffer.from(expectedSignature, "utf8");
+  const received = Buffer.from(signature, "utf8");
+
+  if (expected.length !== received.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expected, received);
+}
+
+// Express example
+app.post("/incoming", express.raw({ type: "application/json" }), (req, res) => {
+  const signature = req.headers["x-goodboyrobot-signature"];
+  const secret = process.env.GOODBOYROBOT_WEBHOOK_SECRET;
+
+  if (!verifyWebhookSignature(req.body, signature, secret)) {
+    return res.status(401).json({ error: "Invalid signature" });
+  }
+
+  // Safe to process the payload
+  const payload = JSON.parse(req.body);
+  res.status(200).json({ received: true });
+});
+```
+
+<Warning>
+  Always verify webhook signatures in production. Skipping signature verification means any actor who discovers your endpoint URL can trigger GoodBoyRobot commands by sending arbitrary payloads. Use `crypto.timingSafeEqual` (or your language's equivalent) rather than a plain string comparison to avoid timing-based attacks.
+</Warning>
+
+## Delivery Retries
+
+GoodBoyRobot considers a webhook delivery successful when it receives an HTTP `2xx` response from your endpoint within **10 seconds**. If your endpoint times out, returns a `4xx` (except `400`), or returns a `5xx`, GoodBoyRobot marks the delivery as failed and schedules a retry.
+
+GoodBoyRobot retries failed deliveries up to **5 times** using exponential backoff:
+
+| Attempt | Delay after previous attempt |
+|---|---|
+| 1st retry | 30 seconds |
+| 2nd retry | 2 minutes |
+| 3rd retry | 10 minutes |
+| 4th retry | 30 minutes |
+| 5th retry | 2 hours |
+
+After 5 failed attempts, GoodBoyRobot marks the delivery as permanently failed and sends an alert to your Dashboard notification center. You can manually replay any failed delivery from **Integrations → Webhooks → [Webhook Name] → Delivery Log**.
+
+<Info>
+  Return a `200` response as quickly as possible — before doing any heavy processing. If your handler takes longer than 10 seconds, GoodBoyRobot will treat the delivery as failed and retry it, potentially causing duplicate executions. Acknowledge immediately, then process the payload asynchronously.
+</Info>
+
+## Managing Webhooks
+
+To view, update, or delete a webhook, go to **Integrations → Webhooks** in your Dashboard. You can also manage webhooks via the API:
+
+```bash
+# List all webhooks
+curl https://api.goodboyrobot.com/api/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Delete a webhook
+curl -X DELETE https://api.goodboyrobot.com/api/v1/webhooks/wh_01hx4k9z2m3n5p7q \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Deleting a webhook immediately invalidates its endpoint URL and signing secret. Any payloads sent to a deleted endpoint receive a `410 Gone` response.

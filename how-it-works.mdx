@@ -1,0 +1,118 @@
+---
+title: "How GoodBoyRobot Works: Commands, Events & Integrations"
+sidebarTitle: "How It Works"
+description: "GoodBoyRobot runs on a three-part model — commands you trigger, events that flow through your system, and integrations that connect your services."
+---
+
+GoodBoyRobot is built around a simple, reliable model that scales from a single developer to a large engineering team. At its core, the platform revolves around three concepts: **Commands** are actions you deliberately trigger, **Events** are things that happen in your system and need to be routed somewhere, and **Integrations** are the external services that send and receive that data. Byte — GoodBoyRobot's mascot and internal routing engine — sits at the center, making sure every signal gets where it needs to go without you having to babysit it.
+
+## The Three-Part Model
+
+Picture a simple flow: your application does something meaningful — a user signs up, a payment succeeds, a deploy finishes. GoodBoyRobot picks up that signal, figures out what should happen next based on your configuration, and dispatches the right actions to the right services. You define the rules once; Byte handles the rest every time.
+
+```
+Your App  ──►  Commands  ──►  Byte (routing engine)  ──►  Integrations
+                                        │
+                               Events ◄─┘
+                                        │
+                              Webhooks  └──►  Your Endpoints
+```
+
+The three parts are designed to work independently or together. You can use just commands to automate a single workflow, or you can wire up the full pipeline — commands feeding events, events triggering integrations, integrations posting webhooks back to your system.
+
+---
+
+## Commands
+
+Commands are the actions you deliberately send to GoodBoyRobot. When you call `POST /api/v1/commands/execute`, you're telling GoodBoyRobot to do something specific — fetch data, trigger a workflow, send a message, or invoke a connected service. Commands are synchronous by default: you send a request, GoodBoyRobot processes it, and you get a structured result back.
+
+Every command has a name and an optional payload. The name identifies what action to run; the payload carries the data that action needs.
+
+```json
+{
+  "command": "notify",
+  "payload": {
+    "channel": "deployments",
+    "message": "Production deploy succeeded at 14:32 UTC."
+  }
+}
+```
+
+You can list all available commands at any time by calling `GET /api/v1/commands`. GoodBoyRobot returns each command's name, description, expected payload shape, and current availability status.
+
+<Accordion title="When should I use a command vs. a webhook?">
+  Use a **command** when you want to trigger something on demand from your own code — like sending a notification or kicking off a workflow in response to a user action. Use a **webhook** when you want GoodBoyRobot to push data *to you* in real time whenever something happens on the platform or in a connected integration. Both are useful; they just point in opposite directions.
+</Accordion>
+
+---
+
+## Events
+
+Events are the things that *happen* — inside GoodBoyRobot, inside your integrations, or in your own application. When an integration receives new data, when a command completes, or when a connected service fires a trigger, GoodBoyRobot turns that activity into a structured event and routes it through the system.
+
+Events carry a type, a timestamp, and a payload that describes what happened. Byte evaluates each event against your configured rules and decides where to send it — to a webhook endpoint, to another command, or to a connected integration.
+
+```json
+{
+  "event": "integration.data_received",
+  "source": "github",
+  "payload": {
+    "repo": "goodboyrobot/core",
+    "action": "push",
+    "branch": "main",
+    "commit": "a3f9c12"
+  },
+  "timestamp": "2024-01-15T14:32:00Z"
+}
+```
+
+<Info>
+  Events are stored and auditable. You can review the full event history for your workspace from the **Events** tab in the dashboard, with filtering by source, type, and date range.
+</Info>
+
+---
+
+## Integrations
+
+Integrations are the connections between GoodBoyRobot and the external services your team relies on. When you connect an integration, you're giving GoodBoyRobot the credentials and permissions it needs to send commands to that service, receive events from it, and surface its data in your workflows.
+
+Connecting an integration takes just a few steps:
+
+<Steps>
+  <Step title="Browse available integrations">
+    Visit the **Integrations** section of the dashboard or call `GET /api/v1/integrations` to see every service GoodBoyRobot supports, along with its current connection status.
+  </Step>
+  <Step title="Connect the service">
+    Click **Connect** next to the integration you want, or send a `POST /api/v1/integrations/connect` request with the required credentials. GoodBoyRobot handles the OAuth flow or API key exchange automatically.
+  </Step>
+  <Step title="Configure your event rules">
+    Once connected, choose which events from that service should flow into GoodBoyRobot, and what should happen when they arrive. You can route them to commands, webhooks, or other integrations.
+  </Step>
+</Steps>
+
+To remove an integration at any time, call `DELETE /api/v1/integrations/{id}` or disconnect it from the dashboard. GoodBoyRobot immediately stops processing events from that service.
+
+<Warning>
+  Removing an integration also pauses any active event rules that depend on it. Review your rules before disconnecting to avoid unexpected gaps in your workflows.
+</Warning>
+
+---
+
+## Byte's Role in the Middle
+
+Byte isn't just a mascot — the name refers to GoodBoyRobot's internal routing engine that evaluates every command, event, and integration handoff in real time. Byte applies your configuration rules, handles retries when a delivery fails, logs everything for auditability, and makes sure data flows in the right order. You set the rules; Byte enforces them faithfully, every time, without complaint.
+
+When something unexpected happens — a malformed payload, a timed-out integration, a command that returns an error — Byte captures the details, flags the issue in your event log, and (if you've set it up) fires a webhook to let you know. Nothing gets silently dropped.
+
+---
+
+## Dive Deeper
+
+<CardGroup cols={2}>
+  <Card title="Commands Reference" icon="terminal" href="/concepts/commands">
+    Explore every available command, its expected payload, and how to use it in your workflows.
+  </Card>
+  <Card title="Integrations Overview" icon="plug" href="/integrations/overview">
+    See all supported integrations and learn how to connect, configure, and manage them.
+  </Card>
+</CardGroup>

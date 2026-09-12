@@ -1,0 +1,102 @@
+---
+title: "Connect Slack to GoodBoyRobot for Real-Time Alerts"
+sidebarTitle: "Slack"
+description: "Get instant Slack notifications for command completions and errors, and trigger GoodBoyRobot commands right from Slack using the /goodboy slash command."
+---
+
+The Slack integration turns your team's Slack workspace into a live command center for GoodBoyRobot. Once connected, GoodBoyRobot posts notifications directly to the channels you choose whenever commands complete, errors occur, or your scheduled digest fires. You can also run GoodBoyRobot commands without leaving Slack using the built-in `/goodboy` slash command, so your team stays in flow without switching tabs.
+
+## What the Slack Integration Does
+
+Connecting Slack enables two capabilities:
+
+- **Outbound notifications:** GoodBoyRobot posts messages to one or more Slack channels when specific events occur — command completions, errors, or a daily activity digest.
+- **Inbound commands:** Anyone in your Slack workspace can type `/goodboy <command>` in any channel to trigger a GoodBoyRobot command on the spot and receive the result as a threaded reply.
+
+<Note>
+  You need **Slack workspace admin** (or Owner) permissions to install the GoodBoyRobot Slack app. If you don't have those permissions, ask your workspace admin to complete the authorization step on your behalf.
+</Note>
+
+## Prerequisites
+
+Before you start, make sure you have:
+
+- A GoodBoyRobot account with at least one active command configured
+- Admin access to the Slack workspace you want to connect
+- A Slack channel already created where you want notifications delivered
+
+## Connect Slack to GoodBoyRobot
+
+<Steps>
+  <Step title="Open the Integrations page">
+    In your GoodBoyRobot Dashboard, click **Integrations** in the left sidebar, then click **Browse**.
+  </Step>
+  <Step title="Select Slack">
+    Find the Slack card and click **Connect**. GoodBoyRobot will show you a summary of the permissions it needs before redirecting you.
+  </Step>
+  <Step title="Authorize in Slack">
+    You'll be taken to Slack's authorization screen. Review the requested permissions — GoodBoyRobot asks for permission to post messages and add a slash command — then click **Allow**.
+  </Step>
+  <Step title="Choose a notification channel">
+    After authorization, you're returned to the GoodBoyRobot Dashboard. Use the **Default Channel** dropdown to select the Slack channel where GoodBoyRobot should post notifications. You can override this per-event type in the next step.
+  </Step>
+  <Step title="Save and test">
+    Click **Save**. GoodBoyRobot sends a test message to your chosen channel to confirm the connection is working. Check Slack — you should see a message from **Byte** within a few seconds.
+  </Step>
+</Steps>
+
+## Configure Event Notifications
+
+After connecting, you control exactly which events send a Slack message. Open **Integrations → Slack → Configure** to adjust the following settings:
+
+<Tabs>
+  <Tab title="Command Completions">
+    Enable **Notify on command completion** to receive a Slack message every time a GoodBoyRobot command finishes running. The message includes the command name, execution time, and a link to the full result in the Dashboard.
+
+    You can scope this to specific commands using the **Command filter** field — leave it blank to notify on all completions.
+  </Tab>
+  <Tab title="Errors">
+    Enable **Notify on error** to get an immediate alert whenever a command fails or an integration encounters a problem. Error messages include the error code and a direct link to the affected command run so your team can diagnose issues fast.
+
+    Consider routing error notifications to a dedicated `#goodboy-alerts` channel to keep them separate from general activity.
+  </Tab>
+  <Tab title="Daily Digest">
+    Enable **Daily digest** to receive a summary message each morning listing commands run, success rate, and any recurring errors from the previous 24 hours. Set your preferred delivery time using the **Digest time** field (uses your account's timezone).
+  </Tab>
+</Tabs>
+
+## Using the /goodboy Slash Command
+
+Once the Slack integration is connected, the `/goodboy` slash command is available in every channel and direct message in your workspace.
+
+To trigger a command, type:
+
+```text
+/goodboy <command-name> [arguments]
+```
+
+For example:
+
+```text
+/goodboy deploy --env staging
+```
+
+GoodBoyRobot acknowledges the command immediately with a threaded reply, then posts a follow-up message when execution completes. The reply is visible only to the channel where you ran the slash command.
+
+<Tip>
+  Type `/goodboy help` in any Slack channel to see a list of all commands available to your account without leaving Slack.
+</Tip>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Slack messages have stopped appearing">
+    This usually means the authorization token has expired or a workspace admin revoked the app's permissions. Go to **Integrations → Slack** in your Dashboard — if the status badge shows **Error**, click **Reconnect** and complete the Slack authorization flow again. If the status shows **Connected** but messages still aren't arriving, check that the target channel hasn't been archived or renamed.
+  </Accordion>
+  <Accordion title="The /goodboy slash command returns 'unknown command'">
+    The slash command is registered at authorization time. If another workspace admin removed the GoodBoyRobot app from Slack, the command will stop working. Reconnect the integration from **Integrations → Slack → Reconnect** to re-register it.
+  </Accordion>
+  <Accordion title="Notifications are going to the wrong channel">
+    Open **Integrations → Slack → Configure** and verify the **Default Channel** setting. If you've set per-event channel overrides, each event type has its own channel field — check those individually.
+  </Accordion>
+</AccordionGroup>

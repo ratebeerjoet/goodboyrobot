@@ -1,0 +1,104 @@
+---
+title: "Integrations: Connect GoodBoyRobot to Your Stack"
+sidebarTitle: "Integrations"
+description: "Integrations connect GoodBoyRobot to external services like Slack and GitHub, letting events from those tools trigger commands automatically in your workspace."
+---
+
+Integrations are the bridges between GoodBoyRobot and the rest of your toolchain. Each integration authenticates with an external service, listens for activity there, and translates that activity into a structured event that GoodBoyRobot can act on. You configure what happens next — which command to run, how to transform the payload, where to send the result — entirely within GoodBoyRobot. Your external tools stay untouched.
+
+## What Integrations Do
+
+An integration does two things: it **receives** events from an external service (inbound), and it can **deliver** results or commands back to that service (outbound). A Slack integration, for example, can listen for a slash command from your team and also post a message back to a Slack channel when a command finishes.
+
+Integrations are not just connectors — they are the primary way that real-world events enter your GoodBoyRobot workspace. Without at least one integration (or a direct API call), there is nothing to trigger your commands automatically.
+
+## Supported Integrations
+
+GoodBoyRobot supports the following integrations today.
+
+<CardGroup cols={3}>
+  <Card title="Slack" icon="slack" href="/integrations/slack">
+    Receive slash commands and channel messages. Post notifications and results back to any Slack channel or user.
+  </Card>
+  <Card title="GitHub" icon="github" href="/integrations/github">
+    React to push events, pull requests, issues, and releases. Automate review notifications, labeling, and status checks.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    Connect any service that can send an HTTP POST. Define a custom event schema and GoodBoyRobot handles the rest.
+  </Card>
+</CardGroup>
+
+## Integration Lifecycle
+
+Every integration — regardless of type — goes through the same three-phase lifecycle before it starts delivering events to your workspace.
+
+<Steps>
+  <Step title="Connect">
+    Authenticate GoodBoyRobot with the external service. For OAuth-based integrations like Slack and GitHub, you authorize through the GoodBoyRobot dashboard. For webhooks, you register your endpoint URL with the external service.
+
+    ```bash
+    curl --request POST \
+      --url https://api.goodboyrobot.com/api/v1/integrations/connect \
+      --header "Authorization: Bearer gbr_your_api_key_here" \
+      --header "Content-Type: application/json" \
+      --data '{
+        "type": "slack",
+        "credentials": {
+          "oauth_token": "xoxb-your-slack-bot-token"
+        }
+      }'
+    ```
+  </Step>
+  <Step title="Configure">
+    Tell GoodBoyRobot which events to listen for and what to do when they arrive. You map incoming event types to commands, set any payload transformations, and define error-handling behavior — all from the dashboard or the API.
+  </Step>
+  <Step title="Activate">
+    Enable the integration to begin receiving live events. Until you activate, GoodBoyRobot accepts test payloads but does not process real traffic. Activation is reversible — you can pause or remove an integration at any time.
+
+    ```bash
+    curl --request GET \
+      --url https://api.goodboyrobot.com/api/v1/integrations \
+      --header "Authorization: Bearer gbr_your_api_key_here"
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Deleting an integration is permanent. Any event routing rules that reference the integration will stop working immediately. Use the pause option if you only need to suspend it temporarily.
+</Warning>
+
+## How Events Flow from Integrations to Commands
+
+When an external service triggers your integration, GoodBoyRobot follows a predictable pipeline to turn that raw activity into an executed command.
+
+<Accordion title="Step 1 — Event ingestion">
+  The external service sends an HTTP payload to your integration's dedicated GoodBoyRobot endpoint. GoodBoyRobot validates the request (signature verification for webhooks, OAuth token check for Slack and GitHub) and acknowledges receipt with a `200 OK` immediately — so the external service is never kept waiting.
+</Accordion>
+
+<Accordion title="Step 2 — Event normalization">
+  GoodBoyRobot normalizes the raw payload into a standard event envelope. Every event has an `integration_id`, an `event_type`, a `received_at` timestamp, and a `data` object containing the original payload. This consistency means your commands always receive data in the same shape, regardless of which integration sent it.
+</Accordion>
+
+<Accordion title="Step 3 — Routing to a command">
+  GoodBoyRobot evaluates your routing rules against the normalized event. The first matching rule determines which command to execute and how to map event fields onto the command's `payload`. If no rule matches, the event is logged and discarded — no command runs.
+</Accordion>
+
+<Accordion title="Step 4 — Command execution and response">
+  GoodBoyRobot executes the matched command exactly as if you had called `POST /api/v1/commands/execute` yourself. The result is recorded with the full event context attached, so you can trace any command execution back to the integration event that caused it.
+</Accordion>
+
+<Info>
+  You can view the full event log for any integration from the dashboard under **Integrations → [Integration Name] → Event History**. Each entry shows the raw payload, the matched routing rule, and the command result — making debugging straightforward.
+</Info>
+
+## Removing an Integration
+
+To disconnect an integration and stop receiving its events, call the delete endpoint with the integration's ID.
+
+```bash
+curl --request DELETE \
+  --url https://api.goodboyrobot.com/api/v1/integrations/int_01hxyz9k2n4pqr7stuv1 \
+  --header "Authorization: Bearer gbr_your_api_key_here"
+```
+
+A `204 No Content` response confirms the integration has been removed. All associated event routing rules are automatically disabled but not deleted, so you can re-create the integration later and re-activate those rules without reconfiguring them from scratch.

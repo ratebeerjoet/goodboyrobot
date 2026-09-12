@@ -1,0 +1,128 @@
+---
+title: "Troubleshooting Common GoodBoyRobot Issues"
+sidebarTitle: "Troubleshooting"
+description: "Diagnose and fix the most common GoodBoyRobot issues — from authentication failures and rate limits to webhook delivery problems and Slack errors."
+---
+
+Even the best-trained robots run into snags sometimes. This guide walks you through the most common issues you might encounter with GoodBoyRobot, explains what causes them, and gives you clear steps to resolve each one. If a problem persists after following these steps, head to the [Support](/help/support) page to reach the team directly.
+
+---
+
+## Authentication Errors (401 Unauthorized)
+
+A `401 Unauthorized` response means GoodBoyRobot could not verify your identity. This is almost always caused by a missing, malformed, or revoked API key.
+
+**Common causes:**
+- The API key has been revoked or has expired
+- The `Authorization` header is missing from the request
+- The header is formatted incorrectly (e.g., missing the `Bearer` prefix)
+- You are using an API key from the wrong environment
+
+**Resolution:**
+
+1. Confirm your API key is still active in **Settings → API Keys**. If it shows as revoked, generate a new one.
+2. Make sure every request includes the `Authorization` header in the exact format below:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+3. Verify you are using the API key that corresponds to the environment (development, staging, production) you are targeting.
+4. Check that your HTTP client is not stripping headers during redirects.
+
+<Warning>
+  Never commit your API key to source control or log it to the console. If you suspect a key has been exposed, revoke it immediately from **Settings → API Keys** and generate a replacement before any further requests are made.
+</Warning>
+
+---
+
+## Rate Limit Errors (429 Too Many Requests)
+
+A `429 Too Many Requests` response means your application has exceeded the number of allowed requests for your current plan within a given time window.
+
+**Common causes:**
+- Sending requests in a tight loop without any delay
+- A burst of automated traffic exceeding your plan's per-minute or per-month limit
+- Multiple services or environments sharing the same API key
+
+**Resolution:**
+
+1. Implement **exponential backoff** in your retry logic — wait a progressively longer interval (e.g., 1 s, 2 s, 4 s) before each retry attempt.
+2. Check your current usage and plan limits in **Settings → Billing**. If you are consistently hitting the limit, consider upgrading your plan.
+3. Use separate API keys for each environment so that staging traffic does not consume your production quota.
+4. Inspect the `Retry-After` response header — it indicates how many seconds to wait before making the next request.
+
+```typescript
+async function fetchWithBackoff(url: string, options: RequestInit, retries = 4) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const response = await fetch(url, options);
+    if (response.status !== 429) return response;
+    const retryAfter = parseInt(response.headers.get("Retry-After") ?? "2", 10);
+    await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000 * 2 ** attempt));
+  }
+  throw new Error("Rate limit exceeded after maximum retries.");
+}
+```
+
+---
+
+## Webhook Not Receiving Events
+
+Your webhook endpoint is registered but events are not arriving — or they are arriving and being rejected.
+
+**Common causes:**
+- The webhook URL is not publicly accessible (e.g., pointing to `localhost`)
+- Your server is rejecting requests due to a failed signature verification
+- The webhook was accidentally paused or deleted
+- A firewall or reverse proxy is blocking inbound POST requests
+
+**Resolution:**
+
+1. Confirm your webhook URL is reachable from the public internet. Tools like [ngrok](https://ngrok.com) can expose a local server for testing.
+2. Navigate to **Integrations → Webhooks → Event Log** in your dashboard to see a record of attempted deliveries, their HTTP response codes, and any error details returned by your endpoint.
+3. Verify that your signature verification logic uses the **raw request body** (not a parsed JSON object) and the correct signing secret from your webhook settings.
+4. Check that your endpoint returns a `2xx` response within **10 seconds**. GoodBoyRobot marks deliveries as failed if the response times out.
+
+<Note>
+  GoodBoyRobot retries failed webhook deliveries up to **5 times** with exponential backoff over approximately 24 hours. You can also manually replay any failed event from the **Event Log**.
+</Note>
+
+---
+
+## Command Execution Timeout
+
+Your command executions are returning a timeout error before completing.
+
+**Common causes:**
+- The command payload is very large, increasing processing time
+- A downstream integration (e.g., a slow external API) is taking too long to respond
+- Your use case requires processing that exceeds the default timeout window
+
+**Resolution:**
+
+1. Be aware that GoodBoyRobot enforces a **default 30-second timeout** on all command executions. Commands that do not complete within this window are cancelled and return a timeout error.
+2. Review your command payload and remove any unnecessary fields or nested data that is not required by the command handler.
+3. If your integration calls an external service, ensure that service is responding within a reasonable time. Consider caching responses or pre-fetching data before submitting the command.
+4. If your workload genuinely requires a longer execution window, [contact support](/help/support) to discuss higher timeout limits available on enterprise plans.
+
+---
+
+## Slack Messages Not Appearing
+
+You have set up the Slack integration and commands are executing successfully, but messages are not appearing in the expected channel.
+
+**Common causes:**
+- The Slack OAuth token has expired or the integration needs to be re-authorized
+- The GoodBoyRobot bot lacks permission to post in the target channel
+- The bot has not been invited into the channel
+
+**Resolution:**
+
+1. Go to **Integrations**, find your Slack integration, and click **Re-authorize**. Follow the OAuth flow to refresh the connection with a new token.
+2. Open the Slack channel where messages should appear and verify that the GoodBoyRobot bot is listed as a member. If not, type `/invite @GoodBoyRobot` in the channel.
+3. Check the channel's posting permissions — some channels restrict posting to specific apps or admins. A Slack workspace admin can adjust this under **Channel Settings → Permissions**.
+4. Review the **Event Log** under **Integrations → Slack** to see whether delivery attempts were made and whether Slack returned an error code (e.g., `channel_not_found` or `not_in_channel`).
+
+<Tip>
+  When debugging Slack delivery, temporarily switch your command target to a private test channel where you have full admin control. This quickly rules out permission issues before investigating further.
+</Tip>

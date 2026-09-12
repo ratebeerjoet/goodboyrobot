@@ -1,0 +1,240 @@
+---
+title: "Commands API Endpoints — List and Execute Commands"
+sidebarTitle: "Commands"
+description: "Use the Commands endpoints to list all available commands and trigger executions with custom payloads, timeouts, and real-time status tracking."
+---
+
+The Commands API is the core of GoodBoyRobot's automation engine. Use these two endpoints to discover what commands Byte has available in your workspace and to kick off executions programmatically — with full control over payloads and timeout behavior.
+
+---
+
+## GET /api/v1/commands
+
+Retrieve a paginated list of all commands available in your workspace. Each command object includes its unique identifier, human-readable name, description, and the JSON schema that defines its expected payload.
+
+### Query Parameters
+
+<ParamField query="limit" type="integer" default={20}>
+  The maximum number of commands to return in a single response. Accepted range is `1–100`.
+</ParamField>
+
+<ParamField query="offset" type="integer" default={0}>
+  The number of commands to skip before returning results. Use together with `limit` to paginate through large command sets.
+</ParamField>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/commands \
+  --request GET \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Accept: application/json" \
+  --url-query "limit=20&offset=0"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "cmd_01hxz7k3p9abcdef",
+      "name": "send-slack-message",
+      "description": "Send a message to a Slack channel or direct message thread.",
+      "schema": {
+        "type": "object",
+        "required": ["channel", "text"],
+        "properties": {
+          "channel": { "type": "string" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    {
+      "id": "cmd_01hxz7k3p9ghijkl",
+      "name": "create-github-issue",
+      "description": "Open a new issue in a connected GitHub repository.",
+      "schema": {
+        "type": "object",
+        "required": ["repo", "title"],
+        "properties": {
+          "repo": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "meta": {
+    "total": 48,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  An array of command objects available in your workspace.
+
+  <Expandable title="Command object fields">
+    <ResponseField name="id" type="string">
+      A unique identifier for the command, prefixed with `cmd_`.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      The machine-readable name used to reference the command in execution requests.
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      A plain-language summary of what the command does.
+    </ResponseField>
+    <ResponseField name="schema" type="object">
+      A JSON Schema object that describes the expected structure of the `payload` field when executing this command.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the response.
+
+  <Expandable title="Meta fields">
+    <ResponseField name="total" type="integer">
+      Total number of commands available in your workspace.
+    </ResponseField>
+    <ResponseField name="limit" type="integer">
+      The `limit` value used for this response.
+    </ResponseField>
+    <ResponseField name="offset" type="integer">
+      The `offset` value used for this response.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## POST /api/v1/commands/execute
+
+Trigger the execution of a command by name. Supply a `payload` that matches the command's schema and, optionally, configure execution behavior with `options`. GoodBoyRobot runs the command asynchronously and returns a execution record you can use to track its status.
+
+### Body Parameters
+
+<ParamField body="command" type="string" required>
+  The machine-readable name of the command to execute — for example, `"send-slack-message"`. Must match a command name returned by `GET /api/v1/commands`.
+</ParamField>
+
+<ParamField body="payload" type="object">
+  An optional key-value object containing the inputs for the command. The expected shape is defined by the command's `schema` field. Omit this field only for commands that require no input.
+</ParamField>
+
+<ParamField body="options" type="object">
+  An optional object for configuring execution behavior.
+
+  <Expandable title="Options fields">
+    <ParamField body="options.timeout" type="integer">
+      Maximum number of **seconds** to wait for the command to complete before it is marked as timed out. Defaults to `30`. Maximum allowed value is `300`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/commands/execute \
+  --request POST \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "command": "send-slack-message",
+    "payload": {
+      "channel": "#deployments",
+      "text": "v2.4.1 deployed to production successfully 🎉"
+    },
+    "options": {
+      "timeout": 15
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "id": "exec_01hxz9m4q7uvwxyz",
+  "status": "completed",
+  "result": {
+    "ok": true,
+    "message_ts": "1714032000.000100"
+  },
+  "executed_at": "2024-04-25T14:20:00.000Z",
+  "duration_ms": 342
+}
+```
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  A unique identifier for this execution, prefixed with `exec_`. Store this to look up or reference the execution later.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The terminal or current status of the execution. One of `completed`, `failed`, or `timed_out`.
+</ResponseField>
+
+<ResponseField name="result" type="object">
+  The output returned by the command upon completion. Structure varies by command. Present only when `status` is `completed`.
+</ResponseField>
+
+<ResponseField name="executed_at" type="string">
+  ISO 8601 timestamp indicating when the execution was started.
+</ResponseField>
+
+<ResponseField name="duration_ms" type="integer">
+  Total time taken to run the command, in milliseconds. Present only when the execution has finished.
+</ResponseField>
+
+### Error Codes
+
+<AccordionGroup>
+  <Accordion title="400 — Invalid Command">
+    The `command` field was missing, empty, or malformed. Verify that your request body is valid JSON and that the `command` field is a non-empty string.
+
+    ```json
+    {
+      "error": "invalid_command",
+      "message": "The 'command' field is required and must be a non-empty string."
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="404 — Command Not Found">
+    No command with the given name exists in your workspace. Double-check the command name against the list returned by `GET /api/v1/commands`.
+
+    ```json
+    {
+      "error": "command_not_found",
+      "message": "No command named 'send-slack-mesage' was found in your workspace."
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="422 — Validation Error">
+    The `payload` you provided does not match the command's JSON Schema. The response includes a `details` array that points to each failing field.
+
+    ```json
+    {
+      "error": "validation_error",
+      "message": "Payload validation failed.",
+      "details": [
+        {
+          "field": "payload.channel",
+          "issue": "Required field is missing."
+        }
+      ]
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  Check each command's `schema` field from the list endpoint before executing — it tells you exactly which payload fields are required and what types they expect.
+</Tip>

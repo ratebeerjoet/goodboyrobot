@@ -1,0 +1,183 @@
+---
+title: "Webhooks API Endpoints — Create and Manage Webhooks"
+sidebarTitle: "Webhooks"
+description: "List, create, and delete outbound webhooks that push real-time event notifications to your systems when commands and integrations fire."
+---
+
+Webhooks let GoodBoyRobot push real-time event notifications to your own systems the moment something meaningful happens — a command completes, an integration runs into an error, and more. The Webhooks API gives you full programmatic control over which URLs receive those notifications and which events trigger them.
+
+---
+
+## GET /api/v1/webhooks
+
+Retrieve a list of all webhooks configured in your workspace, along with the events each one subscribes to.
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/webhooks \
+  --request GET \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Accept: application/json"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "wh_01hxzdp7t4uvwxyz",
+      "url": "https://your-app.example.com/hooks/goodboyrobot",
+      "events": ["command.completed", "command.failed"],
+      "created_at": "2024-04-01T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  An array of webhook objects configured in your workspace.
+
+  <Expandable title="Webhook object fields">
+    <ResponseField name="id" type="string">
+      A unique identifier for the webhook, prefixed with `wh_`.
+    </ResponseField>
+    <ResponseField name="url" type="string">
+      The HTTPS endpoint that receives POST payloads when subscribed events fire.
+    </ResponseField>
+    <ResponseField name="events" type="array">
+      The list of event types this webhook is subscribed to.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the webhook was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## POST /api/v1/webhooks
+
+Create a new webhook that GoodBoyRobot will call whenever any of the specified events occur in your workspace.
+
+### Body Parameters
+
+<ParamField body="url" type="string" required>
+  The destination HTTPS URL that GoodBoyRobot will POST event payloads to. Must use `https://` — plain HTTP endpoints are not accepted.
+</ParamField>
+
+<ParamField body="events" type="array" required>
+  An array of event type strings to subscribe to. Must contain at least one item. See [Available Event Types](#available-event-types) below for the full list of valid values.
+</ParamField>
+
+<ParamField body="secret" type="string">
+  An optional string used to generate an HMAC-SHA256 signature for each outbound request. If provided, GoodBoyRobot will include an `X-GoodBoyRobot-Signature` header on every delivery so you can verify authenticity on your end.
+</ParamField>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/webhooks \
+  --request POST \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "url": "https://your-app.example.com/hooks/goodboyrobot",
+    "events": ["command.completed", "command.failed", "integration.connected"],
+    "secret": "your-signing-secret"
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "id": "wh_01hxzdp7t4abcdef",
+  "url": "https://your-app.example.com/hooks/goodboyrobot",
+  "events": ["command.completed", "command.failed", "integration.connected"],
+  "created_at": "2024-04-25T16:30:00.000Z",
+  "signing_secret": "whs_7f3k9pqLmNrT2vBxYzWcDjUoSeHaIgCb"
+}
+```
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  A unique identifier for the webhook, prefixed with `wh_`.
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The destination URL as provided in the request body.
+</ResponseField>
+
+<ResponseField name="events" type="array">
+  The event types this webhook is subscribed to, echoed from the request.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the webhook was created.
+</ResponseField>
+
+<ResponseField name="signing_secret" type="string">
+  The full signing secret GoodBoyRobot uses to sign outbound payloads. This value is only returned **once** at creation time and cannot be retrieved again.
+</ResponseField>
+
+<Warning>
+  Store the `signing_secret` from the creation response immediately and securely — GoodBoyRobot will never expose it again after this call. If you lose it, you'll need to delete the webhook and create a new one.
+</Warning>
+
+---
+
+## DELETE /api/v1/webhooks/{id}
+
+Permanently delete a webhook. GoodBoyRobot will stop delivering events to the associated URL immediately. This action cannot be undone.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook to delete, prefixed with `wh_`. Retrieve this from the list or create responses.
+</ParamField>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/webhooks/wh_01hxzdp7t4abcdef \
+  --request DELETE \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Response
+
+A successful deletion returns HTTP `204 No Content` with an empty response body.
+
+```
+HTTP/1.1 204 No Content
+```
+
+---
+
+## Available Event Types
+
+GoodBoyRobot emits the following event types. Subscribe to any combination when creating a webhook.
+
+<CardGroup cols={2}>
+  <Card title="command.completed" icon="circle-check">
+    Fires when a command execution finishes successfully. The payload includes the execution `id`, `result`, and `duration_ms`.
+  </Card>
+  <Card title="command.failed" icon="circle-xmark">
+    Fires when a command execution ends in failure or timeout. Includes the execution `id`, `error`, and the `status` value that explains why it failed.
+  </Card>
+  <Card title="integration.connected" icon="plug">
+    Fires when a new integration is successfully connected to your workspace. Includes the integration `id` and `type`.
+  </Card>
+  <Card title="integration.error" icon="triangle-exclamation">
+    Fires when a connected integration encounters a credentials or connectivity error. Includes the integration `id`, `type`, and a human-readable `message`.
+  </Card>
+</CardGroup>
+
+<Info>
+  All webhook deliveries use the `POST` method and send a JSON body with an `event` field identifying the type, a `timestamp` in ISO 8601 format, and a `data` object containing event-specific details.
+</Info>

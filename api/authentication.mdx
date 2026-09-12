@@ -1,0 +1,125 @@
+---
+title: "Authenticate Your API Requests to GoodBoyRobot Securely"
+sidebarTitle: "Authentication"
+description: "Generate an API key in your dashboard and pass it as a Bearer token to securely authenticate every GoodBoyRobot REST API request you make."
+---
+
+Every request to the GoodBoyRobot API must be authenticated with an API key. Keys are generated inside your dashboard and sent along with each request using the standard HTTP `Authorization` header. There are no cookies, sessions, or OAuth flows required — just a single key that you keep secret and rotate on a schedule that fits your security policy.
+
+## Generate an API Key
+
+You create and manage API keys entirely from the GoodBoyRobot dashboard. No CLI or API call is needed to bootstrap your first key.
+
+<Steps>
+  <Step title="Open Settings">
+    Log in to your GoodBoyRobot dashboard and click **Settings** in the left-hand navigation.
+  </Step>
+  <Step title="Navigate to API Keys">
+    Select the **API Keys** tab. You'll see a list of any keys you've already created, along with their scopes and last-used timestamps.
+  </Step>
+  <Step title="Create a New Key">
+    Click **New Key**. Give the key a descriptive name (for example, `production-backend` or `ci-pipeline`), choose the appropriate scope, and click **Create**.
+  </Step>
+  <Step title="Copy and Store the Key">
+    Your new API key is displayed exactly once. Copy it immediately and store it in a secrets manager or environment variable — you cannot retrieve the raw value again after closing this dialog.
+  </Step>
+</Steps>
+
+## Attach the Key to Requests
+
+Pass your API key as a **Bearer token** in the `Authorization` header of every HTTP request:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+### curl
+
+```bash
+curl -X GET https://api.goodboyrobot.com/v1/commands \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+### JavaScript (Fetch API)
+
+```javascript
+const response = await fetch("https://api.goodboyrobot.com/v1/commands", {
+  method: "GET",
+  headers: {
+    "Authorization": `Bearer ${process.env.GOODBOYROBOT_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+});
+
+const { data, meta } = await response.json();
+console.log(data);
+```
+
+<Tip>
+  Store your API key in an environment variable like `GOODBOYROBOT_API_KEY` rather than hardcoding it. This keeps secrets out of your source files and makes rotation painless.
+</Tip>
+
+## Authentication Error Responses
+
+If a request fails authentication, the API returns one of the following errors:
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized — Missing or Invalid Key">
+    The `Authorization` header is absent, malformed, or contains a key that does not exist (or has been revoked).
+
+    ```json
+    {
+      "error": {
+        "code": "unauthorized",
+        "message": "A valid API key is required to access this resource.",
+        "details": []
+      }
+    }
+    ```
+
+    **Fix:** Check that you are including the `Authorization: Bearer YOUR_API_KEY` header and that the key has not been deleted or revoked in the dashboard.
+  </Accordion>
+  <Accordion title="403 Forbidden — Insufficient Permissions">
+    The key is valid, but it does not have the scope required to perform the requested action.
+
+    ```json
+    {
+      "error": {
+        "code": "forbidden",
+        "message": "Your API key does not have permission to perform this action.",
+        "details": [
+          {
+            "required_scope": "write"
+          }
+        ]
+      }
+    }
+    ```
+
+    **Fix:** Generate a new key with the correct scope, or update your existing key's scope in **Settings → API Keys**.
+  </Accordion>
+</AccordionGroup>
+
+## API Key Scopes
+
+When you create a key, you assign it one of three scopes. Choose the least-privileged scope that your integration actually needs.
+
+| Scope | Permissions |
+|---|---|
+| `read` | Read-only access — `GET` endpoints only. Suitable for dashboards and monitoring tools. |
+| `write` | Read and write access — all `GET`, `POST`, `PATCH`, and `PUT` endpoints. Suitable for most integrations. |
+| `admin` | Full access, including `DELETE` endpoints and account-level settings. Suitable for internal tooling and CI/CD pipelines that manage resources. |
+
+## Best Practices
+
+<Warning>
+  Never expose your API key in client-side JavaScript, mobile app bundles, or public repositories. If a key is accidentally committed or leaked, revoke it immediately in **Settings → API Keys** and generate a replacement.
+</Warning>
+
+Follow these practices to keep your integration secure over time:
+
+- **Use environment-specific keys.** Create separate keys for `development`, `staging`, and `production` environments. If one is compromised, you can revoke it without affecting other environments.
+- **Apply the principle of least privilege.** Assign only the scope your integration needs. A read-only analytics dashboard should never hold an `admin`-scoped key.
+- **Rotate keys regularly.** Establish a rotation schedule (for example, every 90 days) and automate it where possible. GoodBoyRobot lets you create a replacement key before revoking the old one so you have zero-downtime rotation.
+- **Audit key usage.** Review the last-used timestamps in **Settings → API Keys** periodically. Revoke any keys that haven't been used recently and are no longer needed.

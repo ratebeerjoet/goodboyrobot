@@ -1,0 +1,120 @@
+---
+title: "Environment Configuration for GoodBoyRobot"
+sidebarTitle: "Environment"
+description: "Manage Development, Staging, and Production environments in GoodBoyRobot — each with isolated API keys, webhooks, and integration configs."
+---
+
+GoodBoyRobot organizes your workspace into distinct environments so that work-in-progress commands and integrations never accidentally affect your live setup. Each environment is fully isolated: it carries its own API keys, webhook endpoints, and integration configurations, giving you a safe ladder to promote changes from development all the way to production.
+
+## Understanding Your Environments
+
+Every GoodBoyRobot workspace ships with three environments out of the box. You can think of them as separate lanes on the same track — same toolset, completely separate data and credentials.
+
+<CardGroup cols={3}>
+  <Card title="Development" icon="code">
+    Your local sandbox. Use it to build, test, and iterate without any risk. Development API keys have rate limits tuned for experimentation, not production throughput.
+  </Card>
+  <Card title="Staging" icon="flask">
+    A production-mirror environment for final validation before release. Staging should closely replicate your production setup — same integrations, same webhook routes — but pointing at non-production data sources.
+  </Card>
+  <Card title="Production" icon="rocket">
+    The live environment your end users and downstream systems interact with. Treat every credential and configuration change here with extra care. Only promote to production after a successful staging validation.
+  </Card>
+</CardGroup>
+
+## Switching Environments
+
+The active environment is always visible in the **top-left dropdown** of the GoodBoyRobot dashboard, right next to the workspace name. Clicking it opens a menu listing all available environments.
+
+<Steps>
+  <Step title="Click the Environment Dropdown">
+    In the top-left corner of the dashboard, click the dropdown that displays your current environment name (e.g., **Development**).
+  </Step>
+  <Step title="Select the Target Environment">
+    Choose **Development**, **Staging**, or **Production** from the list. The dashboard reloads instantly, scoping all commands, logs, webhooks, and integrations to the selected environment.
+  </Step>
+  <Step title="Confirm the Active Context">
+    A colored badge appears next to the workspace name — green for Production, yellow for Staging, and blue for Development — so you always know which environment you're working in at a glance.
+  </Step>
+</Steps>
+
+<Info>
+  Switching environments in the dashboard only changes your view. It does not affect any running processes or live integrations in other environments.
+</Info>
+
+## Environment-Specific Webhooks and Integrations
+
+Webhook URLs and integration credentials are scoped per environment, which means you configure them separately for each tier. This lets you, for example, send Development webhook events to a local tunneling tool like ngrok, Staging events to a test endpoint, and Production events to your real downstream service — all without any configuration overlap.
+
+To view or edit these settings for a specific environment:
+
+1. Switch to the desired environment using the top-left dropdown.
+2. Navigate to **Settings → Webhooks** or **Settings → Integrations**.
+3. All records you see and create belong exclusively to the active environment.
+
+<Accordion title="Why keep integration configs separate per environment?">
+  Sharing a single integration config across environments creates a hidden dependency: a credential rotation in production immediately breaks development, or a misconfigured test payload lands in a live Slack channel. Keeping configs separate means each environment fails (and succeeds) independently, which makes debugging dramatically faster and incidents less likely to cascade.
+</Accordion>
+
+## Best Practices for Environment Management
+
+Following a few simple conventions will save your team from the most common environment-related incidents.
+
+<CardGroup cols={2}>
+  <Card title="Never share production keys in dev" icon="shield-halved">
+    Generate a dedicated API key for each environment. If a development key leaks — in a log file, a screenshot, or a public repo — it cannot be used to access production data.
+  </Card>
+  <Card title="Rotate keys regularly" icon="rotate">
+    Schedule API key rotation on a calendar cadence (quarterly at minimum). Use the **Settings → Security → API Keys** panel to revoke the old key and generate a new one with zero downtime by deploying the new key before revoking the old one.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Production API keys must never be committed to source control. Even in a private repository, keys embedded in code are a serious security risk — version history persists long after a key is "deleted" from the latest commit. Always load production credentials from environment variables or a dedicated secrets manager.
+</Warning>
+
+## Passing the Right Key Per Environment
+
+The recommended pattern is to store each environment's API key in a corresponding environment variable and let your application select the correct one at runtime. Here's how that looks in a Node.js project:
+
+```javascript
+// config/goodboyrobot.js
+
+const ENV = process.env.NODE_ENV || "development";
+
+const API_KEYS = {
+  development: process.env.GBR_API_KEY_DEV,
+  staging: process.env.GBR_API_KEY_STAGING,
+  production: process.env.GBR_API_KEY_PROD,
+};
+
+const apiKey = API_KEYS[ENV];
+
+if (!apiKey) {
+  throw new Error(
+    `No GoodBoyRobot API key found for environment: ${ENV}. ` +
+    `Set the GBR_API_KEY_${ENV.toUpperCase()} environment variable.`
+  );
+}
+
+export const goodboyrobotConfig = {
+  baseUrl: "https://api.goodboyrobot.com/api/v1",
+  headers: {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  },
+};
+```
+
+Store the actual key values in a `.env` file locally (and add `.env` to `.gitignore`) or inject them through your CI/CD secrets store for staging and production deployments. Never hard-code a key value directly in source files.
+
+```bash
+# .env.example  — commit this file; never commit .env
+GBR_API_KEY_DEV=your_development_key_here
+GBR_API_KEY_STAGING=your_staging_key_here
+GBR_API_KEY_PROD=your_production_key_here
+```
+
+<Tip>
+  Use a tool like `dotenv-vault` or your cloud provider's native secrets manager (AWS Secrets Manager, GCP Secret Manager, HashiCorp Vault) to keep production keys out of local developer machines entirely.
+</Tip>

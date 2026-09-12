@@ -1,0 +1,42 @@
+---
+title: "Core Concepts: Understanding the GoodBoyRobot Model"
+sidebarTitle: "Overview"
+description: "Learn the three fundamental building blocks of GoodBoyRobot — Commands, Events, and Integrations — and how they work together to power your automations."
+---
+
+GoodBoyRobot is built around three core ideas that work in harmony: you trigger **Commands** to make things happen, **Integrations** connect your favorite tools to GoodBoyRobot, and **Events** carry information between them in real time. Once you understand how these pieces fit together, everything else in the platform clicks into place.
+
+Think of it like this — an integration (say, GitHub) listens for activity in your external service and fires an event. That event flows into GoodBoyRobot, where it can be matched to a command. The command executes a discrete action — posting a Slack message, transforming data, routing a request — and returns a structured result. The cycle is intentional, auditable, and repeatable.
+
+## The Three Building Blocks
+
+Every automation you build in GoodBoyRobot traces back to one of these three concepts. Read each page in order if you are new, or jump straight to whichever concept you need.
+
+<CardGroup cols={3}>
+  <Card title="Commands" icon="bolt" href="/concepts/commands">
+    Discrete actions you trigger via the API or an integration. Commands are the verbs of GoodBoyRobot — they do the work.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/concepts/integrations">
+    Connections to external services like Slack, GitHub, and custom webhooks that send and receive events.
+  </Card>
+  <Card title="Settings & Configuration" icon="gear" href="/configuration/settings">
+    Configure API keys, notification preferences, team permissions, and workspace-level defaults.
+  </Card>
+</CardGroup>
+
+## How They Fit Together
+
+Events, Commands, and Integrations form a continuous loop:
+
+1. An **Integration** authenticates with an external service and listens for activity.
+2. That activity produces an **Event** — a structured payload that travels into GoodBoyRobot.
+3. GoodBoyRobot routes the event to the appropriate **Command**, which executes and returns a result.
+4. The result can itself trigger downstream commands or be forwarded back to an integration.
+
+<Note>
+  You do not need an integration to use commands. You can call `POST /api/v1/commands/execute` directly from your own code at any time — integrations simply automate the triggering step for you.
+</Note>
+
+## Where to Go Next
+
+If you are setting up GoodBoyRobot for the first time, start with **Commands** to understand what actions are available. Then connect an **Integration** so those actions can be triggered automatically. Use **Settings** to lock down access with API keys and manage your team.

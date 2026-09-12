@@ -1,0 +1,69 @@
+---
+title: "GoodBoyRobot Integrations: Connect Your Favorite Tools"
+sidebarTitle: "Overview"
+description: "Connect GoodBoyRobot to the tools your team already uses. Route events bidirectionally between Slack, GitHub, and custom webhooks in minutes."
+---
+
+Integrations are how GoodBoyRobot fits into your existing workflow rather than replacing it. Every integration you connect creates a two-way bridge: GoodBoyRobot can listen for events from external services and act on them, and it can push notifications or results back out when something happens on its end. Whether you want Slack alerts when a command finishes, automated workflows triggered by a GitHub pull request, or a custom webhook from any HTTP-capable service, integrations make it possible without writing any glue code.
+
+## What Integrations Do
+
+GoodBoyRobot uses **bidirectional event routing** at the core of every integration. This means:
+
+- **Inbound:** External services send events to GoodBoyRobot, which can trigger commands or workflows automatically.
+- **Outbound:** GoodBoyRobot sends status updates, results, and alerts to external services in real time.
+
+Each integration runs independently, so connecting Slack doesn't affect your GitHub setup and vice versa. You can enable, pause, or remove any integration at any time from the Dashboard without disrupting the others.
+
+## Available Integrations
+
+GoodBoyRobot currently supports three integration types:
+
+| Integration | What it does |
+|---|---|
+| **Slack** | Send notifications to channels and trigger commands via the `/goodboy` slash command |
+| **GitHub** | Fire GoodBoyRobot commands on push, pull request, and issue events |
+| **Custom Webhooks** | Receive HTTP POST payloads from any service that can send them |
+
+More integrations are on Byte's roadmap. Keep an eye on the changelog for announcements.
+
+## Finding and Adding Integrations
+
+You add integrations directly from the Dashboard — no CLI or config files required.
+
+1. Open the **Dashboard** and click **Integrations** in the left sidebar.
+2. Click **Browse** to see all available integrations.
+3. Select the integration you want and click **Connect**.
+4. Follow the authorization steps specific to that service.
+
+Once connected, the integration appears in your **Active Integrations** list, where you can configure event filters and manage credentials at any time.
+
+## Integration Status Indicators
+
+Every integration card in your Dashboard shows a live status badge so you always know what's happening at a glance.
+
+<AccordionGroup>
+  <Accordion title="Connected" icon="circle-check">
+    The integration is authorized and actively routing events. Everything is working as expected — no action needed.
+  </Accordion>
+  <Accordion title="Pending" icon="clock">
+    Authorization is in progress or GoodBoyRobot is waiting for the external service to confirm the connection. This usually resolves within a few seconds. Refresh the page if it persists for more than a minute.
+  </Accordion>
+  <Accordion title="Error" icon="circle-exclamation">
+    Something went wrong — typically an expired token or a revoked permission on the external service. Click the integration card to see the specific error and follow the reconnect instructions.
+  </Accordion>
+</AccordionGroup>
+
+## Explore Integrations
+
+<CardGroup cols={3}>
+  <Card title="Slack" icon="slack" href="/integrations/slack">
+    Send real-time alerts to channels and run commands with the `/goodboy` slash command directly from Slack.
+  </Card>
+  <Card title="GitHub" icon="github" href="/integrations/github">
+    Trigger GoodBoyRobot commands automatically on push, pull request, and issue events across your repos.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    Connect any HTTP-capable service by sending a POST payload to your unique GoodBoyRobot webhook URL.
+  </Card>
+</CardGroup>

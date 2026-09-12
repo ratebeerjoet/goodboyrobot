@@ -1,0 +1,115 @@
+---
+title: "Connect GitHub to GoodBoyRobot for Automated Workflows"
+sidebarTitle: "GitHub"
+description: "Trigger GoodBoyRobot commands automatically on GitHub push, pull request, and issue events to build fully automated developer workflows."
+---
+
+The GitHub integration lets GoodBoyRobot listen to your repositories and react to events the moment they happen. When a developer opens a pull request, pushes a commit, or files an issue, GoodBoyRobot can immediately fire any command you've configured — no manual triggering needed. This is how teams wire up automated notifications, deployment checks, and cross-tool workflows without maintaining a separate CI script or custom webhook server.
+
+## What the GitHub Integration Does
+
+Once connected, GoodBoyRobot registers a webhook in each repository you select. GitHub sends event payloads to GoodBoyRobot whenever activity matches your configured triggers, and GoodBoyRobot executes the corresponding commands in response.
+
+Supported GitHub event types include:
+
+- **Push** — any commit pushed to a branch
+- **Pull Request** — opened, closed, merged, or reviewed
+- **Issues** — opened, labeled, assigned, or closed
+
+You map each event type to one or more GoodBoyRobot commands, with optional filters (for example, only fire on pushes to `main`, or only on PRs targeting a specific base branch).
+
+## Prerequisites
+
+Before connecting, make sure you have:
+
+- A GoodBoyRobot account with at least one command configured
+- A GitHub account with **Admin** access to the repositories you want to connect
+- (Optional) A GoodBoyRobot API key scoped to the commands you plan to trigger — see **Settings → API Keys**
+
+## Connect GitHub to GoodBoyRobot
+
+<Steps>
+  <Step title="Open the Integrations page">
+    In your GoodBoyRobot Dashboard, click **Integrations** in the left sidebar, then click **Browse**.
+  </Step>
+  <Step title="Select GitHub">
+    Find the GitHub card and click **Connect**. GoodBoyRobot will describe the permissions it requests before sending you to GitHub.
+  </Step>
+  <Step title="Authorize via GitHub">
+    GitHub's authorization screen lists the permissions GoodBoyRobot needs — primarily the ability to install a webhook on repositories you choose. Click **Authorize GoodBoyRobot** to proceed.
+  </Step>
+  <Step title="Select repositories">
+    After authorization, you're returned to the GoodBoyRobot Dashboard. Use the **Repository selector** to choose which repos GoodBoyRobot should watch. You can add or remove repositories at any time from **Integrations → GitHub → Manage Repos**.
+  </Step>
+  <Step title="Save the connection">
+    Click **Save**. GoodBoyRobot installs its webhook on each selected repository. You'll see a **Connected** badge on the GitHub integration card once all webhooks are registered.
+  </Step>
+</Steps>
+
+## Configure Event Triggers
+
+With your repositories connected, you define which GitHub events fire which GoodBoyRobot commands. Open **Integrations → GitHub → Configure Triggers** and use the trigger builder to set up your rules.
+
+Each trigger has three parts:
+
+<ParamField body="event" type="string" required>
+  The GitHub event type that fires this trigger. One of `push`, `pull_request`, or `issue`.
+</ParamField>
+
+<ParamField body="filter" type="object">
+  Optional conditions that must match for the trigger to fire. For example, restrict a `push` trigger to a specific branch by setting `filter.branch` to `main`.
+</ParamField>
+
+<ParamField body="command" type="string" required>
+  The name of the GoodBoyRobot command to execute when the trigger fires. Must match an existing command in your account.
+</ParamField>
+
+### Example: Notify Slack When a PR Is Opened
+
+A common workflow is to send a Slack message whenever a pull request is opened in a repository. Here's what that trigger configuration looks like in the Dashboard trigger builder, and the equivalent API payload if you prefer to configure it programmatically:
+
+```json
+{
+  "event": "pull_request",
+  "filter": {
+    "action": "opened"
+  },
+  "command": "notify",
+  "command_args": {
+    "channel": "#pull-requests",
+    "message": "New PR opened: {{event.pull_request.title}} by {{event.sender.login}}"
+  }
+}
+```
+
+When a developer opens a PR, GoodBoyRobot fires the `notify` command with the PR title and author automatically interpolated from the GitHub event payload using `{{event.*}}` template variables.
+
+<Tip>
+  Use a separate GoodBoyRobot API key for each repository or team. This makes it straightforward to audit which key triggered which command run, and you can revoke a single key without affecting your other integrations. Generate additional keys under **Settings → API Keys**.
+</Tip>
+
+## Managing Connected Repositories
+
+You can update your repository list at any time without reconnecting the entire integration.
+
+1. Go to **Integrations → GitHub** in the Dashboard.
+2. Click **Manage Repos**.
+3. Check or uncheck repositories as needed, then click **Update**.
+
+Removing a repository uninstalls GoodBoyRobot's webhook from that repo immediately. No further events from that repository will trigger commands.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Triggers aren't firing on GitHub events">
+    First, confirm the integration status badge shows **Connected**. If it shows **Error**, click the card for details — the most common cause is a revoked GitHub authorization. Click **Reconnect** and reauthorize.
+
+    If the status is **Connected** but triggers still aren't firing, check that the repository is listed under **Manage Repos** and that your trigger's event type and filter match the events you're generating on GitHub.
+  </Accordion>
+  <Accordion title="GitHub shows a webhook delivery failure">
+    Open your repository's **Settings → Webhooks** in GitHub and inspect the recent deliveries for the GoodBoyRobot webhook. A `4xx` response usually means the payload was malformed or the command name is invalid — double-check your trigger configuration. A `5xx` response may indicate a temporary GoodBoyRobot outage; GoodBoyRobot will retry automatically.
+  </Accordion>
+  <Accordion title="I don't see my organization's repositories in the selector">
+    GoodBoyRobot can only list repositories where your connected GitHub account has Admin access. If organization repositories are missing, ask an organization owner to grant you admin rights on those repos, then refresh the **Manage Repos** page.
+  </Accordion>
+</AccordionGroup>

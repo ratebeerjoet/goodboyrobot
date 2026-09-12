@@ -1,0 +1,106 @@
+---
+title: "Customize Your GoodBoyRobot Workspace Theme"
+sidebarTitle: "Themes"
+description: "Personalize your GoodBoyRobot workspace with light, dark, and auto themes, custom accent colors, logo uploads, CSS snippets, and Byte mascot variants."
+---
+
+GoodBoyRobot's appearance settings let you shape the workspace to match your team's style — from a simple light/dark preference to a fully branded interface with your own logo, favicon, and accent color. All visual customization lives under **Settings → Appearance** in the dashboard.
+
+## Theme Modes
+
+Choose the base color scheme that best suits how and where your team works. Navigate to **Settings → Appearance → Theme** to select one of three modes.
+
+<CardGroup cols={3}>
+  <Card title="Light" icon="sun">
+    A crisp, bright interface with a white background and dark text. Great for well-lit offices and daytime use. GoodBoyRobot's warm orange accents pop beautifully in light mode.
+  </Card>
+  <Card title="Dark" icon="moon">
+    A rich, deep interface that reduces eye strain in low-light environments. Byte's fur takes on a satisfying warm glow against the dark canvas.
+  </Card>
+  <Card title="Auto" icon="circle-half-stroke">
+    Automatically follows your operating system's appearance setting. When your system switches from light to dark at sunset, so does GoodBoyRobot — no manual toggling needed.
+  </Card>
+</CardGroup>
+
+Your theme preference is saved per user account, so each team member can pick what works for them without affecting anyone else's view.
+
+## Accent Color Picker
+
+Beyond the base theme, you can customize the primary accent color used for buttons, links, active states, and highlights across the entire dashboard. Find the **Accent Color** picker under **Settings → Appearance → Accent Color**.
+
+Click any swatch to apply one of the curated palette options, or type a hex code directly into the input field for an exact match. GoodBoyRobot's default accent is `#ef7025` — a warm, energetic orange — but you're free to dial it into whatever fits your brand.
+
+<Note>
+  The accent color applies workspace-wide and is visible to all members. Only workspace admins can change this setting.
+</Note>
+
+## Logo and Favicon
+
+Replace GoodBoyRobot's default branding with your own in **Settings → Appearance → Branding**.
+
+<Accordion title="Uploading a custom logo">
+  Click **Upload Logo** and select a PNG or SVG file. SVG is recommended for crisp rendering at all screen sizes. The logo appears in the top-left corner of the dashboard sidebar and in outgoing email notifications.
+
+  **Recommended dimensions:** 200 × 48 px (or proportionally equivalent with transparent background)
+</Accordion>
+
+<Accordion title="Uploading a custom favicon">
+  Click **Upload Favicon** and select a square PNG or ICO file. The favicon appears in browser tabs and bookmarks.
+
+  **Recommended dimensions:** 32 × 32 px or 64 × 64 px
+</Accordion>
+
+After uploading, click **Save Branding** to apply the changes. If you ever want to return to GoodBoyRobot's default logo, click **Reset to Default** next to each upload field.
+
+## Custom CSS Injection
+
+For teams that need pixel-perfect control, GoodBoyRobot supports injecting a CSS snippet directly into the dashboard. Navigate to **Settings → Appearance → Advanced → Custom CSS** and paste your styles into the editor.
+
+Custom CSS is applied after all built-in styles, so your rules take precedence. This is useful for fine-tuning font sizes, tweaking sidebar widths, or reinforcing brand-specific color overrides.
+
+```css
+/* Example: override sidebar background and active item highlight */
+:root {
+  --gbr-sidebar-bg: #1a1a2e;
+  --gbr-sidebar-active-bg: #ef7025;
+  --gbr-sidebar-active-text: #ffffff;
+  --gbr-font-family: "Inter", sans-serif;
+}
+
+/* Increase base font size for accessibility */
+body {
+  font-size: 15px;
+}
+
+/* Soften card borders in light mode */
+.gbr-card {
+  border-radius: 12px;
+  border-color: #eec9bc;
+}
+```
+
+<Warning>
+  Custom CSS is powerful but unguarded. Aggressive overrides can break the layout or hide important UI elements. Test changes in a Development environment first, and keep a backup of your current snippet before making large edits.
+</Warning>
+
+## Byte Mascot Appearance
+
+Byte — GoodBoyRobot's resident good boy — shows up in empty states, onboarding flows, and celebration moments throughout the dashboard. You can swap Byte's visual style to match your workspace's personality under **Settings → Appearance → Byte**.
+
+<Tabs>
+  <Tab title="Classic">
+    The original Byte: a warm, rounded cartoon dog rendered in GoodBoyRobot's signature orange-and-teal palette. Friendly, approachable, and instantly recognizable. This is the default style for all new workspaces.
+  </Tab>
+  <Tab title="Minimalist">
+    A clean, line-art version of Byte with reduced color and detail. Perfect for teams who prefer a more professional, understated aesthetic without losing the personality entirely.
+  </Tab>
+  <Tab title="Cosmic">
+    Byte suited up for interstellar missions — a deep-space palette with star-field accents and a glowing outline. A fan favorite for teams working late.
+
+    <Tip>
+      Cosmic Byte's outline glows in dark mode 🐕 Switch your theme to Dark to see the full effect — it's worth it.
+    </Tip>
+  </Tab>
+</Tabs>
+
+Select your preferred Byte style and click **Save** — the change applies immediately everywhere Byte appears in the dashboard.

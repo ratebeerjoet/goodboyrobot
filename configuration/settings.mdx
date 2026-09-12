@@ -1,0 +1,93 @@
+---
+title: "Workspace Settings in GoodBoyRobot"
+sidebarTitle: "Settings"
+description: "Configure your GoodBoyRobot workspace — manage general preferences, notifications, security policies, and API keys all from one central dashboard."
+---
+
+The Settings dashboard is your command center for everything that shapes how your GoodBoyRobot workspace looks, behaves, and stays secure. Whether you're tweaking notification preferences or locking down access with two-factor authentication, every option lives under **Settings** in the main navigation.
+
+## General Settings
+
+General settings control the foundational details of your workspace. Navigate to **Settings → General** to adjust any of the following options.
+
+<CardGroup cols={3}>
+  <Card title="Workspace Name" icon="pen">
+    The display name shown across the dashboard, notifications, and email digests. Choose something your team will immediately recognize.
+  </Card>
+  <Card title="Timezone" icon="clock">
+    Sets the reference timezone for scheduled commands, digest delivery times, and activity logs. Pick the timezone where your core team operates.
+  </Card>
+  <Card title="Language" icon="language">
+    Changes the dashboard interface language. GoodBoyRobot currently supports English, Spanish, French, German, and Japanese.
+  </Card>
+</CardGroup>
+
+After updating any general setting, click **Save Changes** at the bottom of the section. Changes take effect immediately for all workspace members.
+
+## Notification Settings
+
+GoodBoyRobot can reach you through several channels when something important happens — a command completes, an integration goes offline, or a webhook fails. Head to **Settings → Notifications** to configure each channel.
+
+<Tabs>
+  <Tab title="Email Digests">
+    Email digests bundle activity from the past 24 hours into a single message delivered each morning. You can set the delivery time, choose which event types to include, and select individual team members who should receive the digest.
+
+    Toggle **Daily Email Digest** on or off, then use the **Digest Time** picker to choose your preferred delivery hour. Each workspace member can override this setting in their personal profile.
+  </Tab>
+  <Tab title="In-App Alerts">
+    In-app alerts appear in the notification bell (top-right corner of the dashboard) in real time. You can configure which event categories trigger an alert — command failures, integration status changes, webhook delivery errors, and security events are all available.
+
+    Use the **Alert Level** selector to choose between **All Events**, **Warnings & Errors Only**, or **Errors Only** to keep the feed at the right signal-to-noise ratio for your workflow.
+  </Tab>
+  <Tab title="Slack DMs">
+    Connect your Slack workspace under **Settings → Integrations** first, then return to **Settings → Notifications → Slack** to map GoodBoyRobot event types to specific Slack channels or direct messages.
+
+    You can route critical alerts to a dedicated `#goodboyrobot-alerts` channel and send daily digests as a DM to team leads — all from the same configuration panel.
+  </Tab>
+</Tabs>
+
+## Security Settings
+
+Keeping your workspace secure is a shared responsibility between GoodBoyRobot's platform and your configuration choices. The **Settings → Security** section gives you direct control over API keys, session behavior, and multi-factor authentication.
+
+### API Key Management
+
+Every environment in your workspace — Development, Staging, and Production — gets its own set of API keys. From **Settings → Security → API Keys** you can:
+
+- **Generate** a new key for any environment
+- **Revoke** a key instantly if it's been compromised
+- **Copy** a key to your clipboard (it's only shown once at creation time)
+- **Label** keys with a description so you remember which service uses which key
+
+<Note>
+  API keys are shown in full only at the moment of creation. Store each key in a secrets manager or environment variable immediately — GoodBoyRobot never displays the full key again after you close the creation dialog.
+</Note>
+
+### Session Timeout
+
+Under **Settings → Security → Session**, you can set the idle timeout duration for all workspace members. The default is 30 minutes of inactivity. Options range from 15 minutes to 8 hours. Shorter timeouts are recommended for teams working with production data.
+
+### Enabling Two-Factor Authentication
+
+Two-factor authentication (2FA) adds a second verification step at sign-in, protecting your workspace even if a password is compromised. Follow these steps to enable it:
+
+<Steps>
+  <Step title="Open Settings">
+    Click **Settings** in the left-hand navigation bar to open the workspace settings dashboard.
+  </Step>
+  <Step title="Go to Security">
+    Select the **Security** tab from the settings menu. This section contains all access and authentication controls.
+  </Step>
+  <Step title="Find Two-Factor Authentication">
+    Scroll to the **Two-Factor Authentication** panel. You'll see the current status (Enabled or Disabled) and an option to configure the method — authenticator app or SMS.
+  </Step>
+  <Step title="Enable 2FA">
+    Click **Enable**, then follow the on-screen prompts to scan the QR code with your authenticator app (such as Authy or Google Authenticator) or to verify your phone number for SMS codes. Once confirmed, 2FA is active for your account immediately.
+  </Step>
+</Steps>
+
+Workspace admins can also enforce 2FA for all members by toggling **Require 2FA for all members** at the bottom of the Two-Factor Authentication panel. Members who haven't yet enrolled will be prompted to complete setup on their next login.
+
+<Tip>
+  When onboarding new team members, walk through Settings together during their first session. Confirming timezone, notification preferences, and 2FA enrollment up front saves a lot of back-and-forth later — and Byte approves of a well-configured workspace 🐾
+</Tip>

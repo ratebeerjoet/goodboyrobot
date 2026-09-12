@@ -1,47 +1,104 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with GoodBoyRobot in 5 Minutes"
+sidebarTitle: "Quickstart"
+description: "Create your account, generate an API key, and execute your first GoodBoyRobot command in just a few steps — no prior setup needed."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+GoodBoyRobot is designed to get you productive fast. This guide walks you through everything from creating your account to getting a real response back from the API. By the end, you'll have made your first live command call and be ready to explore the rest of the platform. Byte will be right here with you the whole way.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
 
-    ```bash
-    npm install your-package
+  <Step title="Sign up for GoodBoyRobot">
+    Head to [app.goodboyrobot.com](https://app.goodboyrobot.com) and create your free account. You can sign up with your email address or authenticate through GitHub or Google — whichever you prefer.
+
+    Once you're in, you'll land on the GoodBoyRobot dashboard. Take a moment to look around. The left sidebar gives you access to commands, integrations, webhooks, and settings.
+
+    <Tip>
+      If you're joining an existing team workspace, ask your admin to send you an invite link instead of signing up fresh. You'll be added to the right organization automatically.
+    </Tip>
+  </Step>
+
+  <Step title="Generate an API key">
+    Before you can call the API, you need an API key. Navigate to **Settings → API Keys** in the dashboard, then click **New API Key**. Give it a descriptive name — something like `local-dev` or `quickstart-test` — and click **Create**.
+
+    Copy the key immediately and store it somewhere safe, like a password manager or your project's `.env` file. GoodBoyRobot will not show it to you again after you close the dialog.
+
+    <Warning>
+      Never commit your API key to source control. Use environment variables or a secrets manager to keep it out of your codebase.
+    </Warning>
+
+    Your key will look something like this:
+
+    ```text
+    gbr_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Execute your first command">
+    With your API key ready, you can make your first call to the GoodBoyRobot API. The `POST /api/v1/commands/execute` endpoint accepts a command name and a payload, then runs the command and returns a structured response.
+
+    Use the `curl` example below to try it right now. Replace `YOUR_API_KEY` with the key you just generated.
 
     ```bash
-    your-cli init
+    curl --request POST \
+      --url https://api.goodboyrobot.com/api/v1/commands/execute \
+      --header "Authorization: Bearer YOUR_API_KEY" \
+      --header "Content-Type: application/json" \
+      --data '{
+        "command": "fetch",
+        "payload": {
+          "message": "Hello, world!"
+        }
+      }'
     ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
-    ```
+    <Info>
+      All GoodBoyRobot API requests must include the `Authorization: Bearer <token>` header. Requests without a valid token will receive a `401 Unauthorized` response.
+    </Info>
   </Step>
+
+  <Step title="View the response and explore">
+    If everything went smoothly, you'll receive a JSON response that looks like this:
+
+    ```json
+    {
+      "id": "cmd_abc123",
+      "status": "success",
+      "result": {
+        "message": "Hello, world!",
+        "executed_at": "2024-01-15T10:30:00Z"
+      }
+    }
+    ```
+
+    Here's what each field means:
+
+    | Field | Description |
+    |---|---|
+    | `id` | A unique identifier for this command execution. Use it to look up logs or debug issues. |
+    | `status` | The outcome of the command — `success`, `pending`, or `error`. |
+    | `result.message` | The echoed payload from your request, confirming the command ran correctly. |
+    | `result.executed_at` | The ISO 8601 timestamp of when the command was processed. |
+
+    You're now officially up and running with GoodBoyRobot. 🐾 From here, you can connect integrations, set up webhooks, or dig deeper into the full command library.
+
+    <Tip>
+      Check the **Commands** section of the dashboard to see all available commands and their expected payloads. You can also call `GET /api/v1/commands` to retrieve the full list programmatically.
+    </Tip>
+  </Step>
+
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## What's Next?
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+<CardGroup cols={3}>
+  <Card title="Core Concepts" icon="book" href="/how-it-works">
+    Learn how commands, events, and integrations work together under the hood.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/integrations/overview">
+    Connect Slack, GitHub, Notion, and other services to your GoodBoyRobot workspace.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Browse the full API surface with request and response schemas for every endpoint.
+  </Card>
+</CardGroup>

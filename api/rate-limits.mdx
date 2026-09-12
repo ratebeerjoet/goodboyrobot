@@ -1,0 +1,147 @@
+---
+title: "GoodBoyRobot API Rate Limits, Headers, and Retry Strategy"
+sidebarTitle: "Rate Limits"
+description: "Learn GoodBoyRobot's rate limit tiers by plan, how to read limit headers, handle 429 responses, and implement exponential backoff retries."
+---
+
+Rate limits keep the GoodBoyRobot API fast and reliable for everyone. Each plan has a per-minute request budget, tracked per API key. When your integration stays within that budget your requests are served instantly. If you exceed it, the API returns a `429 Too Many Requests` response and tells you exactly how long to wait before trying again. This page explains the limits, the response headers that track them, and a practical retry strategy you can drop straight into your code.
+
+## Rate Limit Tiers
+
+Limits are enforced on a **rolling 60-second window** per API key.
+
+| Plan | Requests per Minute |
+|---|---|
+| Free | 100 |
+| Standard | 1,000 |
+| Enterprise | Custom — contact [sales@goodboyrobot.com](mailto:sales@goodboyrobot.com) |
+
+To check which plan your account is on, go to **Settings → Billing** in your dashboard. To upgrade, click **Change Plan** on the same page.
+
+## Rate Limit Headers
+
+Every API response — successful or not — includes the following headers so you can monitor your consumption in real time:
+
+| Header | Type | Description |
+|---|---|---|
+| `X-RateLimit-Limit` | integer | The maximum number of requests allowed in the current window for your plan. |
+| `X-RateLimit-Remaining` | integer | The number of requests you can still make before the window resets. |
+| `X-RateLimit-Reset` | Unix timestamp | The UTC Unix timestamp (in seconds) when your quota fully resets. |
+
+A typical response header block looks like this:
+
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 842
+X-RateLimit-Reset: 1731580800
+```
+
+Read these headers proactively in your code so you can throttle or pause requests before hitting the limit, rather than waiting for a `429`.
+
+## 429 Response Body
+
+When you exceed your quota the API returns HTTP `429 Too Many Requests` with the following JSON body alongside the rate limit headers:
+
+```json
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "You have exceeded your request quota. Please wait before retrying.",
+    "details": [
+      {
+        "retry_after_seconds": 14
+      }
+    ]
+  }
+}
+```
+
+The `retry_after_seconds` field in `details` gives you the exact number of seconds to wait before your next request will succeed. This is the most precise signal to use when building retry logic.
+
+<Note>
+  The standard HTTP `Retry-After` header is also included in `429` responses and contains the same value as `retry_after_seconds`, expressed in seconds. Many HTTP client libraries read this header automatically.
+</Note>
+
+## Retry Strategy
+
+The recommended approach is **exponential backoff with jitter**: after each failed attempt, wait for a delay that grows exponentially and includes a small random offset. Jitter prevents multiple clients from hammering the API at exactly the same moment after a shared rate-limit window resets.
+
+The algorithm:
+
+1. On the first `429`, read `retry_after_seconds` from the response body and wait at least that long.
+2. For subsequent retries, double the wait time and add a random jitter (0–1 second).
+3. Cap the maximum delay at 60 seconds to avoid unbounded waits.
+4. After 5 consecutive failures, surface the error to the caller rather than retrying indefinitely.
+
+### Node.js Example
+
+```javascript
+const MAX_RETRIES = 5;
+const BASE_DELAY_MS = 1000; // 1 second
+const MAX_DELAY_MS = 60_000; // 60 seconds
+
+async function fetchWithBackoff(url, options, attempt = 0) {
+  const response = await fetch(url, options);
+
+  if (response.status === 429) {
+    if (attempt >= MAX_RETRIES) {
+      throw new Error(`Rate limit exceeded after ${MAX_RETRIES} retries.`);
+    }
+
+    // Prefer the server-supplied retry window; fall back to exponential backoff.
+    const body = await response.json();
+    const serverRetryMs =
+      (body?.error?.details?.[0]?.retry_after_seconds ?? 0) * 1000;
+
+    const exponentialMs = Math.min(
+      BASE_DELAY_MS * 2 ** attempt,
+      MAX_DELAY_MS
+    );
+    const jitterMs = Math.random() * 1000;
+    const delayMs = Math.max(serverRetryMs, exponentialMs) + jitterMs;
+
+    console.warn(
+      `Rate limited. Retrying in ${(delayMs / 1000).toFixed(1)}s ` +
+        `(attempt ${attempt + 1}/${MAX_RETRIES})…`
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    return fetchWithBackoff(url, options, attempt + 1);
+  }
+
+  return response;
+}
+
+// Usage
+const response = await fetchWithBackoff(
+  "https://api.goodboyrobot.com/v1/commands",
+  {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${process.env.GOODBOYROBOT_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+  }
+);
+
+const { data } = await response.json();
+console.log(data);
+```
+
+<Tip>
+  Cache GET responses wherever your use case allows. For example, if you call `GET /api/v1/commands` to render a list of available commands in your UI, cache the result for a few minutes rather than fetching on every page load. Fewer requests means more headroom in your rate-limit budget for the calls that actually need to be real-time.
+</Tip>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Do rate limits apply per API key or per account?">
+    Limits are enforced **per API key**. If your account has multiple keys, each key has its own independent quota. You can spread load across keys for high-volume use cases, but we recommend upgrading your plan rather than managing key pools manually.
+  </Accordion>
+  <Accordion title="What happens to in-flight requests when the window resets?">
+    The rolling window resets smoothly — there is no burst of queued requests released all at once. Once your `X-RateLimit-Remaining` value reaches 0, all subsequent requests in that window return `429` until the reset timestamp passes.
+  </Accordion>
+  <Accordion title="Can I request a temporary limit increase?">
+    Enterprise customers can contact [sales@goodboyrobot.com](mailto:sales@goodboyrobot.com) to discuss custom limits. Free and Standard customers can upgrade their plan in **Settings → Billing** for an immediate quota increase.
+  </Accordion>
+</AccordionGroup>

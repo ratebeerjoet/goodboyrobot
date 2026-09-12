@@ -1,0 +1,106 @@
+---
+title: "GoodBoyRobot REST API: Reference Overview and Endpoints"
+sidebarTitle: "Overview"
+description: "Explore the GoodBoyRobot REST API — base URL, versioning strategy, JSON response envelope, error format, and every available endpoint."
+---
+
+The GoodBoyRobot REST API gives you programmatic access to everything Byte can do — executing commands, managing integrations, configuring webhooks, and reading user data. All communication happens over HTTPS, and every request and response body is JSON. Whether you are building a custom integration or automating your own workflows, this reference covers everything you need to get started.
+
+## Base URL
+
+Every API request targets the following base URL:
+
+```text
+https://api.goodboyrobot.com/v1
+```
+
+All endpoints documented in this reference are relative to that base. For example, the full URL for listing commands is `https://api.goodboyrobot.com/v1/commands`.
+
+<Note>
+  Plain HTTP requests are rejected. Always use HTTPS to keep your data and API key secure.
+</Note>
+
+## Versioning
+
+GoodBoyRobot uses **path-based versioning**. The current stable version is `v1`, reflected directly in the URL path. When a breaking change is necessary, a new version (`v2`, and so on) is introduced at a new path — your existing `v1` integrations keep working without any forced migration.
+
+Non-breaking additions, such as new optional fields or new endpoints, are rolled out to the current version without a version bump. Subscribe to the [changelog](#) to stay informed of any updates.
+
+## Response Envelope
+
+Every successful response is wrapped in a standard envelope so your code always knows where to find the payload and request metadata:
+
+```json
+{
+  "data": {
+    "id": "cmd_01j9xk2p",
+    "name": "greet",
+    "status": "ready"
+  },
+  "meta": {
+    "request_id": "req_7f3a1c9b4d",
+    "timestamp": "2024-11-14T10:32:05Z"
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `data` | object or array | The primary payload returned by the endpoint. |
+| `meta.request_id` | string | A unique identifier for this request. Include it when contacting support. |
+| `meta.timestamp` | string | ISO 8601 UTC timestamp of when the server processed the request. |
+
+## Error Response Format
+
+When a request cannot be completed, the API returns an error envelope instead of a `data` field. HTTP status codes follow standard semantics (4xx for client errors, 5xx for server errors):
+
+```json
+{
+  "error": {
+    "code": "validation_failed",
+    "message": "The 'name' field is required.",
+    "details": [
+      {
+        "field": "name",
+        "issue": "missing_required_field"
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `error.code` | string | A machine-readable error code you can use for programmatic handling. |
+| `error.message` | string | A human-readable description of what went wrong. |
+| `error.details` | array | Optional array of per-field or contextual detail objects. |
+
+## Available Endpoints
+
+The table below lists every public endpoint in the current API version. Click any group name to jump to its dedicated reference page.
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/commands` | List all available commands. |
+| `POST` | `/api/v1/commands/execute` | Execute a command. |
+| `GET` | `/api/v1/integrations` | List connected integrations. |
+| `POST` | `/api/v1/integrations/connect` | Connect a new integration. |
+| `DELETE` | `/api/v1/integrations/{id}` | Remove an integration by ID. |
+| `GET` | `/api/v1/webhooks` | List configured webhooks. |
+| `POST` | `/api/v1/webhooks` | Create a new webhook. |
+| `DELETE` | `/api/v1/webhooks/{id}` | Delete a webhook by ID. |
+| `GET` | `/api/v1/users/me` | Get the current user's profile. |
+| `PATCH` | `/api/v1/users/me` | Update the current user's profile. |
+
+## Next Steps
+
+Before making your first request, set up authentication and review the rate limit policy so your integration runs smoothly from day one.
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Learn how to generate an API key and attach it to every request using the Bearer token scheme.
+  </Card>
+  <Card title="Rate Limits" icon="gauge-high" href="/api/rate-limits">
+    Understand request quotas per plan, the rate limit response headers, and a retry strategy with exponential backoff.
+  </Card>
+</CardGroup>

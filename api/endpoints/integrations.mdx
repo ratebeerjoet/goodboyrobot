@@ -1,0 +1,194 @@
+---
+title: "Integrations API Endpoints — Manage Connections"
+sidebarTitle: "Integrations"
+description: "List, connect, and remove third-party integrations like Slack, GitHub, and webhooks to power all of your GoodBoyRobot automations."
+---
+
+The Integrations API lets you manage every external service that GoodBoyRobot connects to on your behalf. You can programmatically list what's already wired up, add new connections by supplying a service type and its configuration, and cleanly remove integrations you no longer need — all without touching the dashboard.
+
+---
+
+## GET /api/v1/integrations
+
+Return a list of all integrations currently connected to your workspace. The response includes each integration's type, current status, and the timestamp it was first connected.
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/integrations \
+  --request GET \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Accept: application/json"
+```
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "int_01hxzam5r2bcdefg",
+      "type": "slack",
+      "status": "active",
+      "created_at": "2024-03-10T09:15:00.000Z"
+    },
+    {
+      "id": "int_01hxzam5r2hijklm",
+      "type": "github",
+      "status": "active",
+      "created_at": "2024-03-12T14:40:00.000Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  An array of integration objects connected to your workspace.
+
+  <Expandable title="Integration object fields">
+    <ResponseField name="id" type="string">
+      A unique identifier for the integration, prefixed with `int_`.
+    </ResponseField>
+    <ResponseField name="type" type="string">
+      The service type. One of `slack`, `github`, or `webhook`.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      The current health of the integration. One of `active`, `error`, or `disconnected`.
+    </ResponseField>
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the integration was first connected.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## POST /api/v1/integrations/connect
+
+Connect a new third-party integration to your workspace. Supply the service `type` and a `config` object that contains the credentials or settings required for that service. On success, the API returns the newly created integration object.
+
+### Body Parameters
+
+<ParamField body="type" type="string" required>
+  The type of service to connect. Must be one of `slack`, `github`, or `webhook`.
+</ParamField>
+
+<ParamField body="config" type="object" required>
+  A configuration object whose required fields depend on the value of `type`. See the tabs below for per-service shapes.
+</ParamField>
+
+<Tabs>
+  <Tab title="Slack">
+    ```json
+    {
+      "type": "slack",
+      "config": {
+        "bot_token": "xoxb-your-slack-bot-token",
+        "default_channel": "#general"
+      }
+    }
+    ```
+
+    | Config field | Type | Required | Description |
+    |---|---|---|---|
+    | `bot_token` | string | ✅ | A Slack bot OAuth token with `chat:write` scope. |
+    | `default_channel` | string | | The channel Byte posts to when no channel is specified. |
+  </Tab>
+  <Tab title="GitHub">
+    ```json
+    {
+      "type": "github",
+      "config": {
+        "access_token": "ghp_your_github_pat",
+        "default_repo": "acme-corp/backend"
+      }
+    }
+    ```
+
+    | Config field | Type | Required | Description |
+    |---|---|---|---|
+    | `access_token` | string | ✅ | A GitHub personal access token with `repo` scope. |
+    | `default_repo` | string | | The repository Byte targets when no repo is specified, in `owner/name` format. |
+  </Tab>
+  <Tab title="Webhook">
+    ```json
+    {
+      "type": "webhook",
+      "config": {
+        "url": "https://your-app.example.com/hooks/goodboyrobot",
+        "secret": "your-signing-secret"
+      }
+    }
+    ```
+
+    | Config field | Type | Required | Description |
+    |---|---|---|---|
+    | `url` | string | ✅ | The HTTPS endpoint that will receive POST payloads from GoodBoyRobot. |
+    | `secret` | string | | A shared secret used to sign outbound webhook payloads. |
+  </Tab>
+</Tabs>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/integrations/connect \
+  --request POST \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "type": "slack",
+    "config": {
+      "bot_token": "xoxb-your-slack-bot-token",
+      "default_channel": "#deployments"
+    }
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "id": "int_01hxzcn6s3nopqrs",
+  "type": "slack",
+  "status": "active",
+  "created_at": "2024-04-25T15:00:00.000Z"
+}
+```
+
+<Note>
+  GoodBoyRobot encrypts your credentials at rest and never exposes raw tokens through the API after they are stored. Make sure you have your token handy before making this request, as you will not be able to retrieve it afterward.
+</Note>
+
+---
+
+## DELETE /api/v1/integrations/{id}
+
+Remove an integration from your workspace entirely. This action immediately revokes GoodBoyRobot's access to the connected service and deletes all stored credentials. Any commands that relied on this integration will fail until you connect a replacement.
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the integration to remove. Retrieve this from the `id` field in the list or connect responses.
+</ParamField>
+
+### Example Request
+
+```bash
+curl https://api.goodboyrobot.com/api/v1/integrations/int_01hxzam5r2bcdefg \
+  --request DELETE \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+### Response
+
+A successful deletion returns HTTP `204 No Content` with an empty response body.
+
+```
+HTTP/1.1 204 No Content
+```
+
+<Warning>
+  Deleting an integration is permanent and cannot be undone. Any automations that depend on it will stop working immediately. Reconnect using `POST /api/v1/integrations/connect` to restore functionality.
+</Warning>

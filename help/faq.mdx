@@ -1,0 +1,61 @@
+---
+title: "Frequently Asked Questions About GoodBoyRobot"
+sidebarTitle: "FAQ"
+description: "Find quick answers to the most common questions about GoodBoyRobot — from pricing and API keys to team access, SDKs, and keeping your data safe."
+---
+
+Got a question? Byte probably has the answer. Browse the frequently asked questions below to find quick, clear answers about GoodBoyRobot's features, pricing, security, and more. If you don't find what you're looking for here, the [Support](/help/support) page has several ways to reach the team.
+
+<AccordionGroup>
+  <Accordion title="Is GoodBoyRobot free to use?">
+    Yes — GoodBoyRobot offers a **Free tier** that includes up to **1,000 command executions per month** at no cost. It's a great way to explore the platform, build integrations, and get comfortable with the API before committing to a plan.
+
+    When you're ready to scale, paid plans unlock higher execution limits, additional team seats, priority support, and advanced features. You can compare all plans and upgrade at any time from **Settings → Billing** in your dashboard.
+  </Accordion>
+
+  <Accordion title="How do I reset my API key?">
+    You can reset your API key at any time from the dashboard. Navigate to **Settings → API Keys**, find the key you want to invalidate, and click **Revoke**. The key is immediately deactivated — any requests using it will receive a `401 Unauthorized` response from that point on.
+
+    Once revoked, click **Generate New Key** to create a fresh API key. Copy it immediately and store it somewhere safe, such as a secrets manager or environment variable — GoodBoyRobot does not display the full key again after you leave the page.
+  </Accordion>
+
+  <Accordion title="Can I use GoodBoyRobot with multiple team members?">
+    Absolutely. GoodBoyRobot is built for teams. To add a team member, go to **Settings → Team** and click **Invite Member**. Enter their email address, choose a role (Admin, Editor, or Viewer), and send the invite. They'll receive an email with a link to join your workspace.
+
+    Team members share access to integrations, webhooks, and command history within the workspace. Admins can manage roles and remove members at any time from the same **Settings → Team** page.
+  </Accordion>
+
+  <Accordion title="What programming languages does the SDK support?">
+    GoodBoyRobot currently ships official SDKs for the following languages:
+
+    - **JavaScript / TypeScript** — full support, including TypeScript type definitions
+    - **Python** — compatible with Python 3.8 and above
+    - **Go** — idiomatic Go client with context support
+
+    More language SDKs are actively in development. If your preferred language isn't listed yet, you can still integrate directly with the [REST API](/api/overview) using any HTTP client. Check the [API Overview](/api/overview) for the latest supported integrations.
+  </Accordion>
+
+  <Accordion title="How do I switch between environments?">
+    GoodBoyRobot supports multiple environments (for example, `development`, `staging`, and `production`) so you can safely test changes without affecting live data.
+
+    To switch environments, open the **top-left dropdown** in the dashboard — it displays your currently active environment. Click it to reveal the full list and select the environment you want. All commands, integrations, and webhooks shown in the dashboard will update to reflect the selected environment. Each environment has its own set of API keys.
+  </Accordion>
+
+  <Accordion title="What happens if a command fails?">
+    When a command execution fails, GoodBoyRobot automatically **retries the request up to 3 times** using a short delay between attempts. This handles transient errors — such as brief network interruptions or temporary service unavailability — without any action needed on your part.
+
+    If all three retry attempts fail, GoodBoyRobot fires an **`error` event** that you can listen for via a webhook. The event payload includes the original command, the final error message, and a unique request ID you can use when contacting support. You can view the full execution history in **Integrations → Command Log**.
+  </Accordion>
+
+  <Accordion title="Can I customize Byte the mascot?">
+    Yes! Byte loves a makeover. Head to **Settings → Appearance → Byte Style** to personalize your mascot. You can choose from a variety of accessories, color palettes, and expressions to make Byte feel like part of your team.
+
+    Byte customizations are per-workspace, so each workspace can have its own unique look. Appearance settings are purely cosmetic and have no effect on platform behavior or API responses.
+  </Accordion>
+
+  <Accordion title="Is my data encrypted?">
+    Yes — GoodBoyRobot takes data security seriously. All data transmitted between your clients and GoodBoyRobot's servers is encrypted using **TLS (Transport Layer Security)** in transit. All data stored on GoodBoyRobot's infrastructure is encrypted at rest using **AES-256**, an industry-standard encryption algorithm.
+
+    API keys are stored as one-way hashes and are never logged in plaintext. For additional security practices, including our data retention policy and compliance posture, visit our [Security page](https://goodboyrobot.com/security).
+  </Accordion>
+</AccordionGroup>

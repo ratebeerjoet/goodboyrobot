@@ -1,0 +1,114 @@
+---
+title: "Get Support from the GoodBoyRobot Team"
+sidebarTitle: "Support"
+description: "Learn how to reach the GoodBoyRobot support team, which support tier fits your plan, and what information to include for the fastest possible resolution."
+---
+
+The GoodBoyRobot team — and Byte — are here to help. Whether you have a quick question or a thorny integration problem, this page explains the support channels available to you, what to expect from each one, and how to get the fastest response possible. For self-serve answers, check the [FAQ](/help/faq) and [Troubleshooting](/help/troubleshooting) pages first.
+
+---
+
+## Support Tiers
+
+GoodBoyRobot offers three support tiers based on your plan. All tiers have access to the documentation and community resources.
+
+<CardGroup cols={3}>
+  <Card title="Community" icon="users">
+    **Available on:** Free plan
+
+    Access the GoodBoyRobot Discord server and public documentation. Community members and the team actively monitor Discord and answer questions on a best-effort basis. Ideal for exploration and non-critical questions.
+  </Card>
+  <Card title="Standard" icon="headset">
+    **Available on:** Paid plans
+
+    Direct email support with a **next business day** response SLA. Reach the support team at [help@goodboyrobot.com](mailto:help@goodboyrobot.com) or through the in-app chat widget. Best for production workloads that need reliable, timely help.
+  </Card>
+  <Card title="Priority" icon="bolt">
+    **Available on:** Enterprise plans
+
+    Everything in Standard, plus a **4-hour response SLA** (during business hours) and a dedicated Slack channel with a named account engineer. Designed for mission-critical deployments. Contact [sales@goodboyrobot.com](mailto:sales@goodboyrobot.com) to discuss enterprise pricing.
+  </Card>
+</CardGroup>
+
+---
+
+## How to Reach Support
+
+Choose the channel that best fits your situation and plan.
+
+<Tabs>
+  <Tab title="Email">
+    Send a message to **[help@goodboyrobot.com](mailto:help@goodboyrobot.com)** for any support request. Email support is available to Standard and Priority plan customers and is monitored Monday through Friday during business hours (9 AM – 6 PM ET).
+
+    Include the information listed in the [What to Include](#what-to-include-in-a-support-request) section below to help the team resolve your issue as quickly as possible.
+  </Tab>
+  <Tab title="In-App Chat">
+    Click the **chat icon in the bottom-right corner** of any page in the GoodBoyRobot dashboard to open the support chat. This connects you to the same support team as email and is the fastest way to start a conversation during business hours.
+
+    Chat is available on paid plans. Free plan users will be directed to the community Discord.
+  </Tab>
+  <Tab title="Discord Community">
+    Join the **GoodBoyRobot Discord** at [discord.gg/goodboyrobot](https://discord.gg/goodboyrobot) to connect with other developers, share ideas, ask questions, and get help from the community. The `#support` channel is monitored by team members, though responses are on a best-effort basis.
+
+    Discord is open to everyone — no paid plan required.
+  </Tab>
+</Tabs>
+
+---
+
+## What to Include in a Support Request
+
+Providing the right context upfront helps the support team skip the back-and-forth and get straight to a resolution. Include the following in every request:
+
+<Steps>
+  <Step title="Your account email">
+    The email address associated with your GoodBoyRobot account, so the team can locate your workspace quickly.
+  </Step>
+  <Step title="Your environment">
+    Specify which environment the issue occurred in — `development`, `staging`, or `production`. Issues sometimes behave differently across environments, so this detail matters.
+  </Step>
+  <Step title="The request ID">
+    Every API response includes an `x-request-id` header. Copy the value from the failing request and include it in your report. This is the single most useful piece of information for the team to trace exactly what happened.
+  </Step>
+  <Step title="The full error message">
+    Paste the complete error response body — not just the status code. Include any stack traces if you are reporting an SDK issue.
+  </Step>
+</Steps>
+
+<Tip>
+  Always grab the `x-request-id` value from your API response headers before closing the request. It acts like a tracking number — the support team can use it to pull up the full server-side log of that exact request in seconds, drastically reducing diagnosis time.
+</Tip>
+
+---
+
+## Response Time SLAs
+
+| Support Tier | First Response Time       | Channel                        |
+|--------------|---------------------------|--------------------------------|
+| Community    | Best effort               | Discord                        |
+| Standard     | Next business day         | Email, In-App Chat             |
+| Priority     | 4 hours (business hours)  | Email, In-App Chat, Slack      |
+
+Business hours are **Monday – Friday, 9 AM – 6 PM ET**, excluding public holidays. Priority SLAs apply during business hours; after-hours requests will receive a response at the start of the next business day.
+
+---
+
+## Platform Status
+
+Before raising a support request, check whether a known incident or maintenance window is affecting GoodBoyRobot's services.
+
+<CardGroup cols={3}>
+  <Card title="Community Discord" icon="discord" href="https://discord.gg/goodboyrobot">
+    Ask questions, share feedback, and connect with other GoodBoyRobot developers. Free for everyone.
+  </Card>
+  <Card title="Status Page" icon="signal" href="https://status.goodboyrobot.com">
+    Live status for all GoodBoyRobot services. Subscribe to incident notifications via email or RSS so you're always in the loop.
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:help@goodboyrobot.com">
+    Reach the support team directly at help@goodboyrobot.com. Available to Standard and Priority plan customers.
+  </Card>
+</CardGroup>
+
+<Note>
+  If the [status page](https://status.goodboyrobot.com) shows an active incident affecting your service, there is no need to open a separate support ticket — the team is already working on it and will post updates there as they become available.
+</Note>

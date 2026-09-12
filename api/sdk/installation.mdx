@@ -1,0 +1,99 @@
+---
+title: "Install the GoodBoyRobot SDK in Your Project"
+sidebarTitle: "Installation"
+description: "Install the official GoodBoyRobot SDK for JavaScript, TypeScript, Python, or Go and start making API calls in minutes with your API key."
+---
+
+The GoodBoyRobot SDK gives you a clean, type-safe interface to the full API so you can build integrations, automate commands, and manage webhooks without writing raw HTTP requests. Choose the package that matches your stack, initialize a client with your API key, and you're ready to go.
+
+## Available SDKs
+
+<CardGroup cols={3}>
+  <Card title="JavaScript / TypeScript" icon="js">
+    Available on **npm** as `@goodboyrobot/sdk`. Full TypeScript types included out of the box — no extra `@types` package needed.
+  </Card>
+  <Card title="Python" icon="python">
+    Available on **PyPI** as `goodboyrobot`. Compatible with Python 3.9 and above.
+  </Card>
+  <Card title="Go" icon="golang">
+    Available as a Go module at `github.com/goodboyrobot/sdk-go`. Requires Go 1.21 or later.
+  </Card>
+</CardGroup>
+
+## Install the Package
+
+Pick the package manager you already use in your project. All three JavaScript package managers install the same `@goodboyrobot/sdk` package.
+
+<CodeGroup>
+
+```bash npm
+npm install @goodboyrobot/sdk
+```
+
+```bash yarn
+yarn add @goodboyrobot/sdk
+```
+
+```bash pnpm
+pnpm add @goodboyrobot/sdk
+```
+
+```bash pip
+pip install goodboyrobot
+```
+
+```bash go
+go get github.com/goodboyrobot/sdk-go
+```
+
+</CodeGroup>
+
+## Set Your API Key
+
+The SDK reads your API key from the `GOODBOYROBOT_API_KEY` environment variable at initialization time. Generate a key from **Settings → API Keys** in the dashboard, then add it to your environment before running your application.
+
+```bash shell
+export GOODBOYROBOT_API_KEY="your_api_key_here"
+```
+
+For projects that use a `.env` file, add the same line there and load it with your preferred dotenv library (e.g. `dotenv` for Node.js or `python-dotenv` for Python).
+
+<Tip>
+  Store your API key in an environment variable or a secrets manager — never hardcode it in your source files. Committing a live key to version control exposes your account to unauthorized access and requires an immediate key rotation.
+</Tip>
+
+## Initialize the Client
+
+Once the package is installed and your environment variable is set, create a client instance at the top of your application. Pass `apiKey` explicitly if you prefer not to use the environment variable convention, but the environment variable approach is recommended for most deployments.
+
+<CodeGroup>
+
+```typescript TypeScript
+import { GoodBoyRobot } from '@goodboyrobot/sdk';
+
+const client = new GoodBoyRobot({
+  apiKey: process.env.GOODBOYROBOT_API_KEY,
+});
+```
+
+```python Python
+import os
+from goodboyrobot import GoodBoyRobot
+
+client = GoodBoyRobot(api_key=os.environ['GOODBOYROBOT_API_KEY'])
+```
+
+</CodeGroup>
+
+The client instance is lightweight and safe to reuse across your entire application — you don't need to create a new one per request.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Reference" icon="book-open" href="/api/sdk/reference">
+    Explore every method available on the client, complete with TypeScript signatures and runnable examples.
+  </Card>
+  <Card title="API Overview" icon="bolt" href="/api/overview">
+    Read about authentication, rate limits, and error handling for the underlying REST API.
+  </Card>
+</CardGroup>
