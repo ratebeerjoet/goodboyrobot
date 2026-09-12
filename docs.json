@@ -12,7 +12,7 @@
     "tabs": [
       {
         "tab": "Guides",
-        "groups": [
+        "pages": [
           {
             "group": "Get Started",
             "pages": [
@@ -53,7 +53,8 @@
               "help/troubleshooting",
               "help/support"
             ]
-          }
+          },
+          "untitled-page"
         ]
       },
       {
