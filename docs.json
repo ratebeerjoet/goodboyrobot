@@ -54,7 +54,12 @@
               "help/support"
             ]
           },
-          "untitled-page"
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/football"
+            ]
+          }
         ]
       },
       {
