@@ -1,6 +1,6 @@
 API DOCUMENTATION PROJECT
 
- EVALUATION CRITERIA
+##EVALUATION CRITERIA##
 - How easy would it be for an outside developer to understand the API instructions? 
 - How feasible is the technology required for the API to work? 
 
